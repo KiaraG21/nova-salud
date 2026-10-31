@@ -2,7 +2,7 @@
 // POST /api/ventas.php                      registra una venta (vendedor)
 //   {medio_pago, cliente_id?, receta?:{medico, cmp}, items:[{producto_id, presentacion_id, cantidad}]}
 // GET  /api/ventas.php?id=5                 una venta con su detalle
-// GET  /api/ventas.php?desde=&hasta=        listado (administrador)
+// GET  /api/ventas.php?desde=&hasta=        listado (el vendedor ve solo las suyas; filtros: vendedor_id, medio_pago, estado)
 // POST /api/ventas.php?accion=anular&id=5   anula con motivo (administrador) {motivo}
 require __DIR__ . '/../src/helpers.php';
 
@@ -10,16 +10,22 @@ $accion = $_GET['accion'] ?? '';
 
 /* ---------- Consultar ---------- */
 if (method() === 'GET') {
-    require_login();
+    $u = require_login();
+    if ($u['rol'] === 'almacen') {
+        fail('No tienes permiso para esta acción', 403);
+    }
     if (isset($_GET['id'])) {
         $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado, v.motivo_anulacion,
-                                    v.receta_medico, v.receta_cmp, u.nombre AS vendedor, c.nombre AS cliente
+                                    v.receta_medico, v.receta_cmp, v.usuario_id, u.nombre AS vendedor, c.nombre AS cliente
                              FROM ventas v JOIN usuarios u ON u.id = v.usuario_id
                              LEFT JOIN clientes c ON c.id = v.cliente_id WHERE v.id = ?');
         $st->execute([(int) $_GET['id']]);
         $venta = $st->fetch();
         if (!$venta) {
             fail('Venta no encontrada', 404);
+        }
+        if ($u['rol'] === 'vendedor' && (int) $venta['usuario_id'] !== $u['id']) {
+            fail('Solo puedes ver tus propias ventas', 403);
         }
         $st = db()->prepare('SELECT p.nombre AS producto, pr.tipo AS presentacion, d.cantidad, d.unidades_descontadas,
                                     l.numero_lote, d.precio, d.subtotal
@@ -29,19 +35,42 @@ if (method() === 'GET') {
                              JOIN lotes l ON l.id = d.lote_id
                              WHERE d.venta_id = ? ORDER BY d.id');
         $st->execute([$venta['id']]);
-        $venta = castear([$venta], ['id'], ['total'])[0];
+        $venta = castear([$venta], ['id', 'usuario_id'], ['total'])[0];
+        $venta['numero'] = sprintf('V-%04d', $venta['id']);
         $venta['detalle'] = castear($st->fetchAll(), ['unidades_descontadas'], ['cantidad', 'precio', 'subtotal']);
         respond(['venta' => $venta]);
     }
-    require_role('administrador');
+    // Listado: el vendedor ve solo sus ventas; el administrador ve todas y puede filtrar
     $desde = $_GET['desde'] ?? date('Y-m-d');
     $hasta = $_GET['hasta'] ?? date('Y-m-d');
-    $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado, u.nombre AS vendedor
+    $where = ['v.fecha >= ?', 'v.fecha < DATE_ADD(?, INTERVAL 1 DAY)'];
+    $params = [$desde, $hasta];
+    if ($u['rol'] === 'vendedor') {
+        $where[] = 'v.usuario_id = ?';
+        $params[] = $u['id'];
+    } elseif (!empty($_GET['vendedor_id'])) {
+        $where[] = 'v.usuario_id = ?';
+        $params[] = (int) $_GET['vendedor_id'];
+    }
+    if (!empty($_GET['medio_pago'])) {
+        $where[] = 'v.medio_pago = ?';
+        $params[] = (string) $_GET['medio_pago'];
+    }
+    if (!empty($_GET['estado'])) {
+        $where[] = 'v.estado = ?';
+        $params[] = (string) $_GET['estado'];
+    }
+    $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado, u.nombre AS vendedor, c.nombre AS cliente
                          FROM ventas v JOIN usuarios u ON u.id = v.usuario_id
-                         WHERE v.fecha >= ? AND v.fecha < DATE_ADD(?, INTERVAL 1 DAY)
-                         ORDER BY v.fecha DESC LIMIT 500');
-    $st->execute([$desde, $hasta]);
-    respond(['ventas' => castear($st->fetchAll(), ['id'], ['total'])]);
+                         LEFT JOIN clientes c ON c.id = v.cliente_id
+                         WHERE ' . implode(' AND ', $where) . ' ORDER BY v.fecha DESC, v.id DESC LIMIT 500');
+    $st->execute($params);
+    $ventas = castear($st->fetchAll(), ['id'], ['total']);
+    foreach ($ventas as &$v) {
+        $v['numero'] = sprintf('V-%04d', $v['id']);
+    }
+    unset($v);
+    respond(['ventas' => $ventas]);
 }
 
 /* ---------- Anular ---------- */
