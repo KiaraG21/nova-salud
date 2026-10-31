@@ -31,7 +31,7 @@ set_exception_handler(function (Throwable $e) {
     }
     if ($e instanceof PDOException && ($e->errorInfo[1] ?? 0) === 1062) {
         http_response_code(409);
-        echo json_encode(['error' => 'Ya existe un registro con ese valor único'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Ya existe un registro con ese código, documento, RUC o correo'], JSON_UNESCAPED_UNICODE);
         return;
     }
     error_log((string) $e);

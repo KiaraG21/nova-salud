@@ -2,6 +2,7 @@
 // GET  /api/productos.php?q=para        busca por nombre, genérico o código
 // GET  /api/productos.php?barcode=...   busca por código de barras exacto
 // GET  /api/productos.php?id=1          un producto
+// Otros filtros: categoria_id, estado (en_stock, stock_bajo, agotado, por_vencer, vencido), limit, offset
 // POST /api/productos.php               crea producto (administrador o almacén)
 // PUT  /api/productos.php?id=1          edita (los precios solo el administrador)
 require __DIR__ . '/../src/helpers.php';
@@ -30,9 +31,13 @@ function validar_presentaciones(mixed $lista): array
 }
 
 if (method() === 'GET') {
-    require_login();
-    $where = ['p.activo = 1'];
+    $u = require_login();
+    $where = [];
     $params = [];
+    $ver_inactivos = !empty($_GET['incluir_inactivos']) && in_array($u['rol'], ['administrador', 'almacen'], true);
+    if (!$ver_inactivos) {
+        $where[] = 'p.activo = 1';
+    }
     if (isset($_GET['id'])) {
         $where[] = 'p.id = ?';
         $params[] = (int) $_GET['id'];
@@ -46,23 +51,50 @@ if (method() === 'GET') {
         $like = '%' . trim($_GET['q']) . '%';
         array_push($params, $like, $like, $like);
     }
-    if (!empty($_GET['solo_bajo'])) {
-        $where[] = 's.bajo_minimo = 1';
+    if (!empty($_GET['categoria_id'])) {
+        $where[] = 'p.categoria_id = ?';
+        $params[] = (int) $_GET['categoria_id'];
+    }
+    // Filtro por estado (pestañas de Inventario). stock_bajo incluye los agotados.
+    $estado = (string) ($_GET['estado'] ?? (!empty($_GET['solo_bajo']) ? 'stock_bajo' : ''));
+    $por_estado = [
+        'en_stock' => 'COALESCE(s.stock_vigente, 0) >= p.stock_minimo',
+        'stock_bajo' => 'COALESCE(s.stock_vigente, 0) < p.stock_minimo',
+        'agotado' => 'COALESCE(s.stock_vigente, 0) = 0',
+        'por_vencer' => 'EXISTS (SELECT 1 FROM lotes l WHERE l.producto_id = p.id AND l.cantidad_disponible > 0
+                                 AND l.fecha_vencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY))',
+        'vencido' => 'EXISTS (SELECT 1 FROM lotes l WHERE l.producto_id = p.id AND l.cantidad_disponible > 0
+                              AND l.fecha_vencimiento < CURDATE())',
+    ];
+    if ($estado !== '') {
+        if (!isset($por_estado[$estado])) {
+            fail('Estado inválido. Usa: ' . implode(', ', array_keys($por_estado)), 422);
+        }
+        $where[] = $por_estado[$estado];
     }
     $limit = max(1, min(200, (int) ($_GET['limit'] ?? 50)));
     $offset = max(0, (int) ($_GET['offset'] ?? 0));
+    $cond = $where ? implode(' AND ', $where) : '1 = 1';
+    $from = "FROM productos p JOIN categorias c ON c.id = p.categoria_id
+             LEFT JOIN v_stock_producto s ON s.producto_id = p.id WHERE $cond";
+
+    $st = db()->prepare("SELECT COUNT(*) $from");
+    $st->execute($params);
+    $total = (int) $st->fetchColumn();
 
     $sql = "SELECT p.id, p.codigo_barras, p.nombre, p.generico, p.laboratorio, p.categoria_id,
-                   c.nombre AS categoria, p.stock_minimo, p.requiere_receta,
-                   COALESCE(s.stock_vigente, 0) AS stock_vigente
-            FROM productos p
-            JOIN categorias c ON c.id = p.categoria_id
-            LEFT JOIN v_stock_producto s ON s.producto_id = p.id
-            WHERE " . implode(' AND ', $where) . "
-            ORDER BY p.nombre LIMIT $limit OFFSET $offset";
+                   c.nombre AS categoria, p.stock_minimo, p.requiere_receta, p.activo,
+                   COALESCE(s.stock_vigente, 0) AS stock_vigente,
+                   (SELECT MIN(l.fecha_vencimiento) FROM lotes l WHERE l.producto_id = p.id
+                      AND l.cantidad_disponible > 0 AND l.fecha_vencimiento >= CURDATE()) AS proximo_vencimiento,
+                   (SELECT COUNT(*) FROM lotes l WHERE l.producto_id = p.id AND l.cantidad_disponible > 0
+                      AND l.fecha_vencimiento BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 60 DAY)) AS lotes_por_vencer,
+                   (SELECT COUNT(*) FROM lotes l WHERE l.producto_id = p.id AND l.cantidad_disponible > 0
+                      AND l.fecha_vencimiento < CURDATE()) AS lotes_vencidos
+            $from ORDER BY p.nombre LIMIT $limit OFFSET $offset";
     $st = db()->prepare($sql);
     $st->execute($params);
-    $productos = castear($st->fetchAll(), ['id', 'categoria_id', 'stock_minimo', 'stock_vigente']);
+    $productos = castear($st->fetchAll(), ['id', 'categoria_id', 'stock_minimo', 'stock_vigente', 'lotes_por_vencer', 'lotes_vencidos']);
 
     if ($productos) {
         $ids = array_column($productos, 'id');
@@ -76,10 +108,12 @@ if (method() === 'GET') {
         foreach ($productos as &$p) {
             $p['presentaciones'] = $por[$p['id']] ?? [];
             $p['requiere_receta'] = (bool) $p['requiere_receta'];
+            $p['activo'] = (bool) $p['activo'];
+            $p['estado_stock'] = $p['stock_vigente'] === 0 ? 'agotado' : ($p['stock_vigente'] < $p['stock_minimo'] ? 'stock_bajo' : 'en_stock');
         }
         unset($p);
     }
-    respond(['productos' => $productos]);
+    respond(['total' => $total, 'productos' => $productos]);
 }
 
 if (method() === 'POST') {
