@@ -1,0 +1,4 @@
+backend/config/config.php
+.vscode/
+node_modules/
+*.log
