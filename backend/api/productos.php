@@ -82,7 +82,7 @@ if (method() === 'GET') {
     $st->execute($params);
     $total = (int) $st->fetchColumn();
 
-    $sql = "SELECT p.id, p.codigo_barras, p.nombre, p.generico, p.laboratorio, p.categoria_id,
+    $sql = "SELECT p.id, p.codigo_barras, p.nombre, p.generico,     p.laboratorio, p.imagen, p.categoria_id,
                    c.nombre AS categoria, p.stock_minimo, p.requiere_receta, p.activo,
                    COALESCE(s.stock_vigente, 0) AS stock_vigente,
                    (SELECT MIN(l.fecha_vencimiento) FROM lotes l WHERE l.producto_id = p.id
@@ -163,6 +163,16 @@ if (method() === 'PUT') {
     }
     if (isset($b['presentaciones']) && $u['rol'] !== 'administrador') {
         fail('Solo el administrador puede cambiar precios', 403);
+    }
+    if (isset($b['presentaciones'])) {
+        if (!is_array($b['presentaciones'])) {
+            fail('Presentaciones inválidas', 422);
+        }
+        foreach ($b['presentaciones'] as $p) {
+            if (!is_array($p) || (int) ($p['id'] ?? 0) < 1 || !is_numeric($p['precio'] ?? null) || $p['precio'] < 0) {
+                fail('Presentación inválida: revisa el id y que el precio no sea negativo', 422);
+            }
+        }
     }
     transaction(function (PDO $pdo) use ($id, $set, $vals, $b, $antes, $u) {
         if ($set) {

@@ -50,6 +50,7 @@ Usuarios de prueba:
 | `POST ?accion=login` | `{ correo, password }` | `{ usuario: { id, nombre, correo, rol } }` |
 | `POST ?accion=logout` | — | `{ ok: true }` |
 | `GET ?accion=me` | — | `{ usuario }` (sirve para saber si hay sesión) |
+| `POST ?accion=actualizar_perfil` | `{ nombre }` (cualquier usuario, solo su propio nombre) | `{ usuario }` |
 | `POST ?accion=cambiar_password` | `{ actual, nueva, confirmar }` | `{ ok: true }` |
 
 `rol` es `administrador`, `vendedor` o `almacen`. Tras 5 intentos fallidos con el mismo correo, el login responde `429` durante 15 minutos. La contraseña nueva debe tener al menos 8 caracteres y ser distinta de la actual.
@@ -61,6 +62,8 @@ El vendedor ve solo sus propias ventas.
 ```json
 { "ventas_hoy": { "total": 1250, "cantidad": 18, "variacion_vs_ayer_pct": 12.0 },
   "stock_bajo": 12, "por_vencer_60_dias": 8, "vencidos": 2,
+  "lotes_por_vencer": 12, "alertas_activas": 8, "productos_en_stock": 320,
+  "ventas_7_dias": [{ "fecha": "2026-10-06", "total": 840.5 }, "… 7 días, el último es hoy"],
   "ventas_recientes": [{ "id": 125, "numero": "V-0125", "fecha": "2026-10-12 10:15:00", "cliente": "Ana Torres", "total": 32.5, "medio_pago": "efectivo", "estado": "emitida" }],
   "alertas_recientes": [{ "id": 3, "tipo": "stock_bajo", "producto": "…", "mensaje": "…", "fecha": "…" }] }
 ```
@@ -98,10 +101,11 @@ El vendedor ve solo sus propias ventas.
 
 ## Lotes e ingreso de mercadería — `api/lotes.php`
 
-**GET `?producto_id=5`** (con sesión): lotes ordenados por vencimiento. El primero con stock es el que se vende primero (FEFO).
+**GET** (con sesión): lotes ordenados por vencimiento (el primero con stock es el que se vende primero, FEFO). Filtros opcionales: `producto_id`, `q` (n.° de lote o producto), `estado` (`vigente`, `por_vencer`, `vencido`, `agotado`), `limit` (máx. 200), `offset`.
 
 ```json
-{ "lotes": [{ "id": 10, "numero_lote": "AB-2410", "fecha_vencimiento": "2026-11-25",
+{ "total": 1, "lotes": [{ "id": 10, "producto_id": 5, "producto": "Amoxicilina 500 mg cápsula", "numero_lote": "AB-2410",
+  "fecha_ingreso": "2026-10-01", "fecha_vencimiento": "2026-11-25",
   "cantidad_inicial": 30, "cantidad_disponible": 30, "costo_unitario": 6, "dias_restantes": 25 }] }
 ```
 
@@ -118,7 +122,7 @@ Respuesta `201`: `{ compra_id, total, lotes: [ids] }`. Rechaza vencimientos de h
 
 ## Compras (historial de ingresos) — `api/compras.php` (almacén o administrador)
 
-- `GET ?desde=&hasta=` (por defecto, últimos 90 días) → `{ compras: [{ id, fecha, proveedor, registrado_por, total, items }] }`.
+- `GET ?desde=&hasta=` (por defecto, últimos 90 días) → `{ compras: [{ id, fecha, proveedor, registrado_por, total, items (líneas), unidades (suma de cantidades) }] }`.
 - `GET ?id=1` → `{ compra: { id, fecha, total, proveedor, registrado_por, items: [{ producto, numero_lote, fecha_vencimiento, cantidad, costo_unitario }] } }`.
 
 ## Proveedores — `api/proveedores.php` (almacén o administrador)
@@ -152,7 +156,7 @@ Respuesta `201`: `{ compra_id, total, lotes: [ids] }`. Rechaza vencimientos de h
 
 **GET `?id=3`** (vendedor o administrador): venta con `numero`, vendedor, cliente, receta, `estado` (`emitida` o `anulada`), `motivo_anulacion` y `detalle: [{ producto, presentacion, cantidad, unidades_descontadas, numero_lote, precio, subtotal }]`. El vendedor solo puede ver las suyas.
 
-**GET `?desde=&hasta=`** (por defecto, hoy): listado con `numero, fecha, vendedor, cliente, medio_pago, total, estado`. El vendedor ve solo sus ventas. El administrador puede filtrar por `vendedor_id`, `medio_pago` y `estado`.
+**GET `?desde=&hasta=`** (por defecto, hoy): listado con `numero, fecha, vendedor, cliente, cliente_documento, medio_pago, total, estado`. El vendedor ve solo sus ventas. El administrador puede filtrar por `vendedor_id`, `medio_pago` y `estado`.
 
 **POST `?accion=anular&id=3`** (administrador): cuerpo `{ motivo }`. Devuelve el stock a los lotes. `409` si ya estaba anulada.
 
@@ -165,7 +169,7 @@ Respuesta `201`: `{ compra_id, total, lotes: [ids] }`. Rechaza vencimientos de h
   "alertas": [{ "id": 3, "tipo": "stock_bajo", "producto_id": 6, "producto": "…", "lote_id": null, "numero_lote": null, "mensaje": "…", "fecha": "…" }] }
 ```
 
-Los contadores de las pestañas salen de `resumen`. **POST `?accion=atender&id=3`** (almacén o administrador) marca una alerta como atendida.
+Los contadores de las pestañas salen de `resumen`. **POST `?accion=atender&id=3`** (almacén o administrador) marca una alerta como atendida: deja de mostrarse y no se vuelve a crear mientras la condición siga igual. Cuando el problema desaparece (se repone el stock, el lote se agota o vence) la alerta pasa a `resuelta`, y si el problema vuelve se genera una nueva.
 
 ## Reportes — `api/reportes.php` (solo administrador)
 
@@ -186,7 +190,7 @@ Los contadores de las pestañas salen de `resumen`. **POST `?accion=atender&id=3
 
 ## Auditoría — `api/auditoria.php` (solo administrador, solo lectura)
 
-`GET` con filtros opcionales `accion`, `usuario_id`, `desde`, `hasta`, `limit` (máx. 200) y `offset`.
+`GET` con filtros opcionales `accion`, `usuario_id`, `desde`, `hasta`, `q` (busca en acción, entidad, usuario y valor nuevo), `limit` (máx. 200) y `offset`.
 
 ```json
 { "total": 120, "acciones": ["anular", "venta", "login", "…"],
@@ -194,7 +198,7 @@ Los contadores de las pestañas salen de `resumen`. **POST `?accion=atender&id=3
               "entidad": "venta", "entidad_id": 3, "valor_anterior": { "estado": "emitida" }, "valor_nuevo": { "estado": "anulada", "motivo": "…" } }] }
 ```
 
-`acciones` sirve para llenar el filtro "Tipo de evento". Las acciones que se registran: `login`, `login_fallido`, `venta`, `anular`, `ingreso_mercaderia`, `crear`, `editar`, `atender_alerta`, `cambiar_password`, `editar_y_cambiar_password`.
+`acciones` sirve para llenar el filtro "Tipo de evento". Las acciones que se registran: `login`, `login_fallido`, `venta`, `anular`, `ingreso_mercaderia`, `crear`, `editar`, `editar_perfil`, `atender_alerta`, `cambiar_password`, `editar_y_cambiar_password`.
 
 ## Lo que queda fuera de esta versión
 

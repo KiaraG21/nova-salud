@@ -1,6 +1,7 @@
 <?php
 // POST /api/auth.php?accion=login   {correo, password}
 // POST /api/auth.php?accion=logout
+// POST /api/auth.php?accion=actualizar_perfil   {nombre}
 // POST /api/auth.php?accion=cambiar_password   {actual, nueva, confirmar}
 // GET  /api/auth.php?accion=me
 require __DIR__ . '/../src/helpers.php';
@@ -42,6 +43,18 @@ if (method() === 'POST' && $accion === 'logout') {
 
 if (method() === 'GET' && $accion === 'me') {
     respond(['usuario' => require_login()]);
+}
+
+if (method() === 'POST' && $accion === 'actualizar_perfil') {
+    $u = require_login();
+    $nombre = trim((string) (body()['nombre'] ?? ''));
+    if ($nombre === '' || mb_strlen($nombre) > 80) {
+        fail('Escribe tu nombre (máximo 80 caracteres)', 422);
+    }
+    db()->prepare('UPDATE usuarios SET nombre = ? WHERE id = ?')->execute([$nombre, $u['id']]);
+    $_SESSION['user']['nombre'] = $nombre;
+    audit(db(), $u['id'], 'editar_perfil', 'usuario', $u['id'], ['nombre' => $u['nombre']], ['nombre' => $nombre]);
+    respond(['usuario' => $_SESSION['user']]);
 }
 
 if (method() === 'POST' && $accion === 'cambiar_password') {

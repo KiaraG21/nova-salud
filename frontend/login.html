@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="logo" viewBox="0 0 48 48">
+        <path d="M18 4h12v14h14v12H30v14H18V30H4V18h14z" fill="currentColor"/>
+        <path d="M30 44c0-9 5-15 14-16-1 9-5 15-14 16z" fill="#22c55e"/>
+      </symbol>
+      <symbol id="logo-grande" viewBox="0 0 72 60">
+        <defs><linearGradient id="hoja" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#86efac"/></linearGradient></defs>
+        <path d="M24 2h14v16h14v14H38v14H24V32H10V18h14z" fill="#3b1f9a"/>
+        <path d="M40 56C38 38 48 24 68 20 70 40 60 54 40 56z" fill="url(#hoja)" stroke="#fff" stroke-width="2"/>
+        <path d="M43 52C50 42 58 33 64 27" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1.6" stroke-linecap="round"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <main class="login">
+    <form class="form-tarjeta" id="form" novalidate>
+      <div class="login-logo">
+        <svg><use href="#logo-grande"/></svg>
+        <b>Nova Salud</b>
+        <small>Botica &amp; Salud</small>
+      </div>
+      <h1>NovaSalud POS</h1>
+      <p>Ingresa a tu cuenta</p>
+
+      <div class="alerta-error" id="error" role="alert"></div>
+
+      <div class="entrada con-icono">
+        <svg class="icono" viewBox="0 0 24 24"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></svg>
+        <input id="correo" name="correo" type="email" autocomplete="username" placeholder="Correo electrónico" aria-label="Correo electrónico" required autofocus>
+      </div>
+      <div class="entrada con-icono con-boton">
+        <svg class="icono" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Contraseña" aria-label="Contraseña" required>
+        <button type="button" class="ver" id="ver" aria-label="Mostrar contraseña">
+          <svg class="icono" id="ojo" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+
+      <button class="btn btn-primario" id="enviar" type="submit">Iniciar sesión</button>
+      <p class="ayuda" id="ayuda" hidden>Si no puedes ingresar, pide al administrador que revise tu cuenta o restablezca tu contraseña.</p>
+      <button type="button" class="enlace-ayuda" id="btn-ayuda">¿Problemas para ingresar?</button>
+      <a class="volver" href="index.html">← Volver a la página principal</a>
+    </form>
+    <p class="lema">Tu salud,<br>nuestra misión
+      <svg viewBox="0 0 200 18" aria-hidden="true"><defs><linearGradient id="trazo" x1="0" x2="1"><stop offset="0" stop-color="#bbf7d0"/><stop offset="1" stop-color="#15803d"/></linearGradient></defs><path d="M4 12C60 2 130 2 196 10" fill="none" stroke="url(#trazo)" stroke-width="4" stroke-linecap="round"/></svg>
+    </p>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

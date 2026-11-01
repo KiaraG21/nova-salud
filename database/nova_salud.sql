@@ -45,6 +45,7 @@ CREATE TABLE productos (
   nombre VARCHAR(150) NOT NULL,
   generico VARCHAR(150),
   laboratorio VARCHAR(80),
+  imagen VARCHAR(120) NULL,
   categoria_id INT NOT NULL,
   stock_minimo INT NOT NULL DEFAULT 0 COMMENT 'En unidades',
   requiere_receta TINYINT(1) NOT NULL DEFAULT 0,
@@ -145,7 +146,7 @@ CREATE TABLE alertas (
   producto_id INT NOT NULL,
   lote_id INT NULL,
   mensaje VARCHAR(255) NOT NULL,
-  estado ENUM('activa','atendida') NOT NULL DEFAULT 'activa',
+  estado ENUM('activa','atendida','resuelta') NOT NULL DEFAULT 'activa',
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (producto_id) REFERENCES productos(id),
   FOREIGN KEY (lote_id) REFERENCES lotes(id),
@@ -244,6 +245,41 @@ INSERT INTO productos (codigo_barras, nombre, generico, laboratorio, categoria_i
 ('7750001000029','Termómetro digital',NULL,'Marca propia',6,8,0),
 ('7750001000030','Metformina 850 mg tableta','Metformina','Genfar',11,60,1),
 ('7750001000031','Losartán 50 mg tableta','Losartán potásico','MK',11,60,1);
+
+-- Fotos en frontend/img/productos/ 
+UPDATE productos SET imagen = CASE id
+  WHEN 1 THEN '1.jpg'
+  WHEN 2 THEN '2.webp'
+  WHEN 3 THEN '3.jpg'
+  WHEN 4 THEN '4.png'
+  WHEN 5 THEN '5.webp'
+  WHEN 6 THEN '6.jpg'
+  WHEN 7 THEN '7.jpg'
+  WHEN 8 THEN '8.jpg'
+  WHEN 9 THEN '9.webp'
+  WHEN 10 THEN '10.jpg'
+  WHEN 11 THEN '11.jpg'
+  WHEN 12 THEN '12.jpg'
+  WHEN 13 THEN '13.png'
+  WHEN 14 THEN '14.webp'
+  WHEN 15 THEN '15.jpg'
+  WHEN 16 THEN '16.webp'
+  WHEN 17 THEN '17.webp'
+  WHEN 18 THEN '18.webp'
+  WHEN 19 THEN '19.jpg'
+  WHEN 20 THEN '20.webp'
+  WHEN 21 THEN '21.png'
+  WHEN 22 THEN '22.webp'
+  WHEN 23 THEN '23.webp'
+  WHEN 24 THEN '24.jpg'
+  WHEN 25 THEN '25.webp'
+  WHEN 26 THEN '26.webp'
+  WHEN 27 THEN '27.webp'
+  WHEN 28 THEN '28.webp'
+  WHEN 29 THEN '29.webp'
+  WHEN 30 THEN '30.jpg'
+  WHEN 31 THEN '31.png'
+END WHERE id <= 31;
 
 INSERT INTO presentaciones (producto_id, tipo, unidades, precio) VALUES
 (1,'unidad',1,0.30),

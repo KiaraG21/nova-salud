@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Compras · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="app">
+  <div class="principal">
+    <header class="topbar" id="topbar"></header>
+    <main class="contenido" id="contenido">
+      <section class="panel lista">
+        <div class="panel-cab">
+          <h2>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h13v10H3zM16 10h3l2 3v4h-5M7 19a1.5 1.5 0 1 0 0 .01M17 19a1.5 1.5 0 1 0 0 .01"/></svg>
+            Compras
+          </h2>
+          <button class="btn btn-cobrar btn-mas" id="nuevo" type="button">+ Registrar Compra</button>
+        </div>
+
+        <div id="tabla" aria-live="polite"><p class="vacio">Cargando compras…</p></div>
+        <div class="paginacion" id="paginacion"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+  <dialog class="modal modal-ancho" id="m-det" aria-labelledby="m-det-t">
+    <h2 id="m-det-t"></h2>
+    <div id="det-cuerpo"></div>
+    <div class="m-botones uno"><button class="btn btn-borde" id="det-cerrar" type="button">Cerrar</button></div>
+  </dialog>
+
+  <dialog class="modal modal-compra" id="m-compra" aria-labelledby="m-compra-t">
+    <form id="f-compra" novalidate>
+      <h2 id="m-compra-t">Registrar compra</h2>
+      <p class="m-ayuda">Cada producto ingresa como un lote nuevo y el stock aumenta de inmediato.</p>
+      <label class="campo">Proveedor *<select id="c-prov"></select></label>
+      <h3 class="sub">Productos</h3>
+      <div id="c-items"></div>
+      <button class="btn btn-borde btn-chico" id="c-mas" type="button">+ Agregar producto</button>
+      <p class="cmp-total">Total: <b id="c-total">S/ 0.00</b></p>
+      <p class="alerta-error" id="c-error" role="alert"></p>
+      <div class="m-botones">
+        <button class="btn btn-borde" id="c-cancelar" type="button">Cancelar</button>
+        <button class="btn btn-cobrar" id="c-guardar" type="submit">Registrar compra</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/compras.js"></script>
+</body>
+</html>

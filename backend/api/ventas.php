@@ -16,7 +16,7 @@ if (method() === 'GET') {
     }
     if (isset($_GET['id'])) {
         $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado, v.motivo_anulacion,
-                                    v.receta_medico, v.receta_cmp, v.usuario_id, u.nombre AS vendedor, c.nombre AS cliente
+                                    v.receta_medico, v.receta_cmp, v.usuario_id, u.nombre AS vendedor, c.nombre AS cliente, c.documento AS cliente_documento
                              FROM ventas v JOIN usuarios u ON u.id = v.usuario_id
                              LEFT JOIN clientes c ON c.id = v.cliente_id WHERE v.id = ?');
         $st->execute([(int) $_GET['id']]);
@@ -27,7 +27,7 @@ if (method() === 'GET') {
         if ($u['rol'] === 'vendedor' && (int) $venta['usuario_id'] !== $u['id']) {
             fail('Solo puedes ver tus propias ventas', 403);
         }
-        $st = db()->prepare('SELECT p.nombre AS producto, pr.tipo AS presentacion, d.cantidad, d.unidades_descontadas,
+        $st = db()->prepare('SELECT p.nombre AS producto, p.imagen, pr.tipo AS presentacion, d.cantidad, d.unidades_descontadas,
                                     l.numero_lote, d.precio, d.subtotal
                              FROM detalle_venta d
                              JOIN productos p ON p.id = d.producto_id
@@ -60,7 +60,7 @@ if (method() === 'GET') {
         $where[] = 'v.estado = ?';
         $params[] = (string) $_GET['estado'];
     }
-    $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado, u.nombre AS vendedor, c.nombre AS cliente
+    $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado,     u.nombre AS vendedor, c.nombre AS cliente, c.documento AS cliente_documento
                          FROM ventas v JOIN usuarios u ON u.id = v.usuario_id
                          LEFT JOIN clientes c ON c.id = v.cliente_id
                          WHERE ' . implode(' AND ', $where) . ' ORDER BY v.fecha DESC, v.id DESC LIMIT 500');
@@ -129,7 +129,7 @@ if (method() === 'POST') {
             }
         }
 
-        $stProd = $pdo->prepare('SELECT p.nombre, p.requiere_receta, pr.unidades, pr.precio
+        $stProd = $pdo->prepare('SELECT p.nombre, p.imagen, p.requiere_receta, pr.unidades, pr.precio
                                  FROM productos p JOIN presentaciones pr ON pr.producto_id = p.id
                                  WHERE p.id = ? AND pr.id = ? AND p.activo = 1');
         // FEFO: primero los lotes que vencen antes; FOR UPDATE bloquea las filas durante la venta
@@ -180,7 +180,7 @@ if (method() === 'POST') {
             foreach ($asignado as $a) {
                 $descuenta->execute([$a['unidades'], $a['lote_id']]);
             }
-            $lineas[] = ['producto_id' => $pid, 'presentacion_id' => $presId, 'nombre' => $row['nombre'],
+            $lineas[] = ['producto_id' => $pid, 'presentacion_id' => $presId, 'nombre' => $row['nombre'], 'imagen' => $row['imagen'],
                          'precio' => (float) $row['precio'], 'presentacion_unidades' => (int) $row['unidades'],
                          'unidades' => $unidades, 'importe' => $importe, 'asignado' => $asignado];
             $total += $importe;
@@ -204,7 +204,7 @@ if (method() === 'POST') {
                 $insD->execute([$ventaId, $ln['producto_id'], $a['lote_id'], $ln['presentacion_id'],
                                 round($a['unidades'] / $ln['presentacion_unidades'], 3), $a['unidades'], $ln['precio'], $sub]);
             }
-            $comprobante[] = ['producto' => $ln['nombre'], 'unidades' => $ln['unidades'], 'importe' => $ln['importe'],
+            $comprobante[] = ['producto' => $ln['nombre'], 'imagen' => $ln['imagen'], 'unidades' => $ln['unidades'], 'importe' => $ln['importe'],
                               'lotes' => array_column($ln['asignado'], 'numero_lote')];
         }
         audit($pdo, $u['id'], 'venta', 'venta', $ventaId, null, ['total' => $total, 'medio_pago' => $medio, 'lineas' => count($lineas)]);

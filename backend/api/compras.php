@@ -19,7 +19,7 @@ if (isset($_GET['id'])) {
         fail('Ingreso no encontrado', 404);
     }
     $compra = castear([$compra], ['id'], ['total'])[0];
-    $st = db()->prepare('SELECT pr.nombre AS producto, l.numero_lote, l.fecha_vencimiento, d.cantidad, d.costo_unitario
+    $st = db()->prepare('SELECT pr.nombre AS producto, pr.imagen, l.numero_lote, l.fecha_vencimiento, d.cantidad, d.costo_unitario
                          FROM detalle_compra d JOIN productos pr ON pr.id = d.producto_id JOIN lotes l ON l.id = d.lote_id
                          WHERE d.compra_id = ? ORDER BY d.id');
     $st->execute([$compra['id']]);
@@ -30,9 +30,10 @@ if (isset($_GET['id'])) {
 $desde = $_GET['desde'] ?? date('Y-m-d', strtotime('-90 days'));
 $hasta = $_GET['hasta'] ?? date('Y-m-d');
 $st = db()->prepare('SELECT c.id, c.fecha, p.razon_social AS proveedor, u.nombre AS registrado_por, c.total,
-                            (SELECT COUNT(*) FROM detalle_compra d WHERE d.compra_id = c.id) AS items
+                            (SELECT COUNT(*) FROM detalle_compra d WHERE d.compra_id = c.id) AS items,
+                            (SELECT COALESCE(SUM(d.cantidad), 0) FROM detalle_compra d WHERE d.compra_id = c.id) AS unidades
                      FROM compras c JOIN proveedores p ON p.id = c.proveedor_id JOIN usuarios u ON u.id = c.usuario_id
                      WHERE c.fecha >= ? AND c.fecha < DATE_ADD(?, INTERVAL 1 DAY)
                      ORDER BY c.fecha DESC, c.id DESC LIMIT 500');
 $st->execute([$desde, $hasta]);
-respond(['compras' => castear($st->fetchAll(), ['id', 'items'], ['total'])]);
+respond(['compras' => castear($st->fetchAll(), ['id', 'items', 'unidades'], ['total'])]);

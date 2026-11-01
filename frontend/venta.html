@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Punto de Venta · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="app">
+  <div class="principal">
+    <header class="topbar" id="topbar"></header>
+    <main class="contenido" id="contenido">
+      <h1 class="bienvenida">Punto de Venta</h1>
+      <p class="saludo">Busca o toca un producto para agregarlo a la venta</p>
+
+      <div class="pv">
+        <section class="pv-catalogo panel">
+          <label class="pv-buscar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="q" type="search" placeholder="Buscar producto por nombre o código… (F9)" autocomplete="off" aria-label="Buscar producto">
+            <kbd>F9</kbd>
+          </label>
+          <div class="pv-cats" id="cats" role="group" aria-label="Categorías"></div>
+          <div id="productos" class="pv-grid" aria-live="polite"><p class="vacio">Cargando productos…</p></div>
+        </section>
+
+        <aside class="pv-carrito panel" aria-label="Venta actual">
+          <div class="pv-tabla" id="lineas"></div>
+          <dl class="pv-totales" id="totales"></dl>
+          <div class="pv-acciones">
+            <button class="btn btn-borde" id="limpiar" type="button">Limpiar</button>
+            <button class="btn btn-cancelar" id="cancelar" type="button">Cancelar</button>
+            <button class="btn btn-cobrar" id="cobrar" type="button" disabled>Cobrar</button>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+  <dialog class="modal" id="m-cobro" aria-labelledby="m-cobro-t">
+    <form method="dialog" id="f-cobro" novalidate>
+      <h2 id="m-cobro-t">Cobrar venta</h2>
+      <p class="m-total">Total a pagar <strong id="m-total"></strong></p>
+
+      <fieldset class="m-bloque">
+        <legend>Medio de pago</legend>
+        <div class="pagos" id="pagos">
+          <label><input type="radio" name="pago" value="efectivo" checked><span>Efectivo</span></label>
+          <label><input type="radio" name="pago" value="tarjeta"><span>Tarjeta</span></label>
+          <label><input type="radio" name="pago" value="yape"><span>Yape</span></label>
+          <label><input type="radio" name="pago" value="plin"><span>Plin</span></label>
+        </div>
+        <div class="m-efectivo" id="m-efectivo">
+          <label for="recibido">Monto recibido</label>
+          <input id="recibido" type="number" min="0" step="0.10" inputmode="decimal" placeholder="0.00">
+          <span class="vuelto" id="vuelto"></span>
+        </div>
+      </fieldset>
+
+      <fieldset class="m-bloque">
+        <legend>Cliente <small>(opcional)</small></legend>
+        <div class="m-fila">
+          <input id="documento" inputmode="numeric" maxlength="11" placeholder="DNI (8) o RUC (11)" aria-label="Documento del cliente">
+          <button class="btn btn-borde" id="buscar-cli" type="button">Buscar</button>
+        </div>
+        <p class="m-ayuda" id="cli-estado">Sin cliente: se registra como «Cliente general».</p>
+        <input id="cli-nombre" placeholder="Nombre del nuevo cliente" aria-label="Nombre del nuevo cliente" hidden>
+      </fieldset>
+
+      <fieldset class="m-bloque" id="m-receta" hidden>
+        <legend>Receta médica <small>(hay productos con receta)</small></legend>
+        <div class="m-fila">
+          <input id="medico" placeholder="Nombre del médico *" aria-label="Nombre del médico">
+          <input id="cmp" placeholder="CMP" maxlength="20" aria-label="CMP">
+        </div>
+      </fieldset>
+
+      <p class="alerta-error" id="m-error" role="alert"></p>
+      <div class="m-botones">
+        <button class="btn btn-borde" id="m-volver" type="button">Volver</button>
+        <button class="btn btn-cobrar" id="m-confirmar" type="submit">Confirmar cobro</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal" id="m-ok" aria-labelledby="m-ok-t">
+    <div class="ok-icono"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></div>
+    <h2 id="m-ok-t">Venta registrada</h2>
+    <p class="ok-numero" id="ok-numero"></p>
+    <ul class="ok-lista" id="ok-lista"></ul>
+    <p class="m-total">Total cobrado <strong id="ok-total"></strong></p>
+    <p class="m-ayuda" id="ok-vuelto"></p>
+    <div class="m-botones">
+      <button class="btn btn-borde" id="ok-imprimir" type="button">Imprimir</button>
+      <button class="btn btn-cobrar" id="ok-nueva" type="button">Nueva venta</button>
+    </div>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/venta.js"></script>
+</body>
+</html>

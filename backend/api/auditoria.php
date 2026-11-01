@@ -1,5 +1,5 @@
 <?php
-// GET /api/auditoria.php?accion=venta&usuario_id=1&desde=2026-10-01&hasta=2026-10-31&limit=50&offset=0
+// GET /api/auditoria.php?accion=venta&usuario_id=1&desde=2026-10-01&hasta=2026-10-31&q=texto&limit=50&offset=0
 // Solo administrador, solo lectura.
 require __DIR__ . '/../src/helpers.php';
 
@@ -26,11 +26,16 @@ if (!empty($_GET['hasta'])) {
     $where[] = 'a.fecha < DATE_ADD(?, INTERVAL 1 DAY)';
     $params[] = (string) $_GET['hasta'];
 }
+if (!empty($_GET['q'])) {
+    $where[] = '(a.accion LIKE ? OR a.entidad LIKE ? OR u.nombre LIKE ? OR a.valor_nuevo LIKE ?)';
+    $like = '%' . trim((string) $_GET['q']) . '%';
+    array_push($params, $like, $like, $like, $like);
+}
 $limit = max(1, min(200, (int) ($_GET['limit'] ?? 50)));
 $offset = max(0, (int) ($_GET['offset'] ?? 0));
 $cond = implode(' AND ', $where);
 
-$st = db()->prepare("SELECT COUNT(*) FROM auditoria a WHERE $cond");
+$st = db()->prepare("SELECT COUNT(*) FROM auditoria a LEFT JOIN usuarios u ON u.id = a.usuario_id WHERE $cond");
 $st->execute($params);
 $total = (int) $st->fetchColumn();
 

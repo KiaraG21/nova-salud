@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuración · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="app">
+  <div class="principal">
+    <header class="topbar" id="topbar"></header>
+    <main class="contenido" id="contenido">
+      <section class="panel lista">
+        <div class="panel-cab">
+          <h2>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+            Configuración
+          </h2>
+        </div>
+
+        <div class="rep-layout">
+          <nav class="rep-menu" id="cfg-menu" aria-label="Configuración">
+            <button class="rep-op activa" data-panel="perfil" type="button">Mi Perfil</button>
+            <button class="rep-op" data-panel="clave" type="button">Cambiar Contraseña</button>
+          </nav>
+
+          <div class="rep-cuadro">
+            <form id="p-perfil" novalidate>
+              <h3 class="cfg-t">Información del Usuario</h3>
+              <div class="cfg-perfil">
+                <span class="avatar avatar-grande" id="p-avatar"></span>
+                <div class="cfg-datos">
+                  <label class="campo">Nombre<input id="p-nombre" maxlength="80"></label>
+                  <p class="cfg-rol"><span class="chip chip-verde" id="p-rol"></span></p>
+                  <p class="cfg-correo" id="p-correo"></p>
+                  <p class="m-ayuda">Para cambiar tu correo o tu rol, pídeselo a un administrador.</p>
+                </div>
+              </div>
+              <p class="alerta-error" id="p-error" role="alert"></p>
+              <div class="m-botones uno"><button class="btn btn-cobrar" id="p-guardar" type="submit">Guardar Cambios</button></div>
+            </form>
+
+            <form id="p-clave" novalidate hidden>
+              <h3 class="cfg-t">Cambiar Contraseña</h3>
+              <div class="cfg-clave">
+                <label class="campo">Contraseña actual<input id="c-actual" type="password" autocomplete="current-password"></label>
+                <label class="campo">Nueva contraseña<input id="c-nueva" type="password" minlength="8" autocomplete="new-password"></label>
+                <label class="campo">Confirmar nueva contraseña<input id="c-conf" type="password" autocomplete="new-password"></label>
+                <p class="m-ayuda">Mínimo 8 caracteres y distinta de la actual.</p>
+              </div>
+              <p class="alerta-error" id="c-error" role="alert"></p>
+              <div class="m-botones uno"><button class="btn btn-cobrar" id="c-guardar" type="submit">Guardar Cambios</button></div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/configuracion.js"></script>
+</body>
+</html>

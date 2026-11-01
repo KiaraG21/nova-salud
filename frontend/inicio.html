@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="app">
+  <div class="principal">
+    <header class="topbar" id="topbar"></header>
+    <main class="contenido" id="contenido">
+      <h1 class="bienvenida" id="bienvenida">¡Bienvenido!</h1>
+      <p class="saludo">Aquí tienes un resumen de tu botica</p>
+
+      <section class="kpis" id="tarjetas" aria-live="polite">
+        <div class="kpi cargando"></div>
+        <div class="kpi cargando"></div>
+        <div class="kpi cargando"></div>
+        <div class="kpi cargando"></div>
+      </section>
+
+      <div class="fila-grafico">
+        <section class="panel">
+          <div class="panel-cab"><h2>Ventas de los últimos 7 días</h2><span class="pildora">Últimos 7 días</span></div>
+          <div id="grafico"><p class="vacio">Cargando…</p></div>
+        </section>
+        <section class="panel">
+          <div class="panel-cab">
+            <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 6-3 7-3 8h18c0-1-3-2-3-8a6 6 0 0 0-6-6zM10 19a2 2 0 0 0 4 0z"/></svg>Alertas recientes</h2>
+            <span id="ver-alertas"></span>
+          </div>
+          <div id="alertas"><p class="vacio">Cargando…</p></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-cab">
+          <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2zM9 8h6M9 12h6"/></svg>Últimas ventas</h2>
+          <span id="ver-ventas"></span>
+        </div>
+        <div id="ventas"><p class="vacio">Cargando…</p></div>
+      </section>
+    </main>
+  </div>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/inicio.js"></script>
+</body>
+</html>
