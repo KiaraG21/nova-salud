@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nova Salud · Botica y salud</title>
   <meta name="description" content="Nova Salud: botica con productos de calidad y asesoría farmacéutica para toda tu familia.">
-  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="css/estilos.css?v=5">
 </head>
 <body class="landing">
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -116,11 +116,11 @@
       <div class="contenedor">
         <div class="titulo"><h2>Productos más vendidos</h2><p>Calidad y ahorro en un solo lugar</p></div>
         <div class="grid-5">
-          <a class="prod" href="#contacto"><img src="img/medicamentos.jpg" alt=""><span class="pie-prod"><b>Medicamentos</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></a>
-          <a class="prod" href="#contacto"><img src="img/vitaminas.jpg" alt=""><span class="pie-prod"><b>Vitaminas y suplementos</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></a>
-          <a class="prod" href="#contacto"><img src="img/cuidado.jpg" alt=""><span class="pie-prod"><b>Cuidado personal</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></a>
-          <a class="prod" href="#contacto"><img src="img/formulas.jpg" alt=""><span class="pie-prod"><b>Fórmulas infantiles</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></a>
-          <a class="prod" href="#contacto"><img src="img/higiene.jpg" alt=""><span class="pie-prod"><b>Higiene</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></a>
+          <button class="prod producto-abrir" type="button" data-producto="medicamentos"><img src="img/medicamentos.jpg" alt=""><span class="pie-prod"><b>Medicamentos</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></button>
+          <button class="prod producto-abrir" type="button" data-producto="vitaminas"><img src="img/vitaminas.jpg" alt=""><span class="pie-prod"><b>Vitaminas y suplementos</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></button>
+          <button class="prod producto-abrir" type="button" data-producto="cuidado-personal"><img src="img/cuidado.jpg" alt=""><span class="pie-prod"><b>Cuidado personal</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></button>
+          <button class="prod producto-abrir" type="button" data-producto="formulas"><img src="img/formulas.jpg" alt=""><span class="pie-prod"><b>Fórmulas infantiles</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></button>
+          <button class="prod producto-abrir" type="button" data-producto="higiene"><img src="img/higiene.jpg" alt=""><span class="pie-prod"><b>Higiene</b><svg class="icono"><use href="#i-flecha-circulo"/></svg></span></button>
         </div>
       </div>
     </section>
@@ -129,10 +129,10 @@
       <div class="contenedor">
         <div class="titulo"><h2>Consejos de salud</h2><p>Tips y recomendaciones para una vida más saludable</p></div>
         <div class="grid-4">
-          <article class="consejo"><img src="img/alimentacion.jpg" alt=""><div><h3>Alimentación balanceada</h3><p>Descubre cómo llevar una dieta equilibrada.</p><a href="#contacto">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></a></div></article>
-          <article class="consejo"><img src="img/infancia.jpg" alt=""><div><h3>Cuidados básicos en la infancia</h3><p>Pequeños hábitos, grandes beneficios.</p><a href="#contacto">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></a></div></article>
-          <article class="consejo"><img src="img/hidratacion.jpg" alt=""><div><h3>La importancia de la hidratación</h3><p>Cuida tu cuerpo, toma agua.</p><a href="#contacto">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></a></div></article>
-          <article class="consejo"><img src="img/mayores.jpg" alt=""><div><h3>Salud en adultos mayores</h3><p>Bienestar en cada etapa de tu vida.</p><a href="#contacto">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></a></div></article>
+          <article class="consejo"><img src="img/alimentacion.jpg" alt=""><div><h3>Alimentación balanceada</h3><p>Descubre cómo llevar una dieta equilibrada.</p><button class="consejo-leer" type="button" data-consejo="alimentacion">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></button></div></article>
+          <article class="consejo"><img src="img/infancia.jpg" alt=""><div><h3>Cuidados básicos en la infancia</h3><p>Pequeños hábitos, grandes beneficios.</p><button class="consejo-leer" type="button" data-consejo="infancia">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></button></div></article>
+          <article class="consejo"><img src="img/hidratacion.jpg" alt=""><div><h3>La importancia de la hidratación</h3><p>Cuida tu cuerpo, toma agua.</p><button class="consejo-leer" type="button" data-consejo="hidratacion">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></button></div></article>
+          <article class="consejo"><img src="img/mayores.jpg" alt=""><div><h3>Salud en adultos mayores</h3><p>Bienestar en cada etapa de tu vida.</p><button class="consejo-leer" type="button" data-consejo="adultos-mayores">Leer más <svg class="icono chico"><use href="#i-flecha"/></svg></button></div></article>
         </div>
       </div>
     </section>
@@ -143,14 +143,21 @@
           <h2>Contáctanos</h2>
           <p class="sub">Estamos aquí para ayudarte</p>
           <ul>
-            <li><svg class="icono"><use href="#i-pin-lleno"/></svg> Jr. Thomas Cochrane 3175</li>
+            <li><svg class="icono"><use href="#i-pin-lleno"/></svg> Jr. Thomas Cochrane 3175, Villa El Salvador 15834</li>
             <li><svg class="icono"><use href="#i-reloj"/></svg> Lun - Sáb: 8:00 a.m. – 10:00 p.m.</li>
             <li><svg class="icono"><use href="#i-telefono"/></svg> (01) 987 654 321</li>
           </ul>
           <a class="btn btn-oscuro" href="https://wa.me/51987654321" target="_blank" rel="noopener"><svg class="icono chico"><use href="#i-chat"/></svg> Escríbenos por WhatsApp <svg class="icono chico"><use href="#i-flecha"/></svg></a>
         </div>
-        <div class="mapa" role="img" aria-label="Mapa de ubicación de Nova Salud">
-          <span class="etiqueta-mapa"><svg class="icono"><use href="#i-pin-lleno"/></svg>Nova Salud</span>
+        <div class="mapa">
+          <iframe
+            src="https://maps.google.com/maps?q=-12.212690%2C-76.936371&amp;z=17&amp;output=embed"
+            title="Mapa de ubicación de Nova Salud"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            allowfullscreen>
+          </iframe>
+          <a class="mapa-ruta" href="https://www.google.com/maps/dir/?api=1&amp;destination=-12.212690%2C-76.936371" target="_blank" rel="noopener">Cómo llegar</a>
         </div>
         <div class="visitanos">
           <div><h3>Visítanos</h3><p>Encuentra nuestra botica cerca de ti.</p></div>
@@ -183,5 +190,29 @@
   </footer>
 
   <a class="wsp" href="https://wa.me/51987654321" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp"><svg class="icono"><use href="#i-chat"/></svg></a>
+  <dialog class="consejo-modal" aria-labelledby="consejo-modal-titulo">
+    <button class="consejo-modal-cerrar" type="button" aria-label="Cerrar ventana">×</button>
+    <img class="consejo-modal-imagen" alt="">
+    <div class="consejo-modal-contenido">
+      <span class="consejo-modal-etiqueta">Consejo de salud</span>
+      <h2 id="consejo-modal-titulo"></h2>
+      <p class="consejo-modal-intro"></p>
+      <ul class="consejo-modal-puntos"></ul>
+      <p class="consejo-modal-nota">Esta información es general y no reemplaza la evaluación de un profesional de salud.</p>
+    </div>
+  </dialog>
+  <dialog class="producto-modal" aria-labelledby="producto-modal-titulo">
+    <button class="producto-modal-cerrar" type="button" aria-label="Cerrar ventana">×</button>
+    <img class="producto-modal-imagen" alt="">
+    <div class="producto-modal-contenido">
+      <span class="producto-modal-etiqueta">Catálogo Nova Salud</span>
+      <h2 id="producto-modal-titulo"></h2>
+      <p class="producto-modal-intro"></p>
+      <ul class="producto-modal-lista"></ul>
+      <p class="producto-modal-nota">El catálogo del sistema contiene datos de ejemplo. Consulta en la botica la existencia y el precio actual de cada producto. Los medicamentos que requieren receta deben adquirirse con la receta correspondiente.</p>
+      <a class="producto-modal-consultar" href="https://wa.me/51987654321" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+    </div>
+  </dialog>
+  <script src="js/landing.js" defer></script>
 </body>
 </html>
