@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --morado: #4320b5;
   --oscuro: #21154f;
   --lavanda: #a78bfa;
@@ -224,7 +224,7 @@ section { padding: 40px 0; }
   align-items: center; gap: clamp(40px, 8vw, 120px); padding: 56px clamp(32px, 8vw, 128px);
   position: relative; overflow: hidden; isolation: isolate; color: #fff;
   background: linear-gradient(90deg, rgba(10,4,43,.5), rgba(11,5,45,.2) 58%, rgba(10,4,43,.42)),
-    url(../img/login-fondo.jpeg) center / cover no-repeat, #12083f;
+    url(../img/login-fondo.webp) center / cover no-repeat, #12083f;
 }
 .login-marca { max-width: 580px; text-shadow: 0 2px 24px rgba(0,0,0,.2); }
 .login-identidad { display: flex; align-items: center; gap: 20px; }
@@ -288,7 +288,7 @@ a.menu-item:hover { background: rgba(255,255,255,.1); color: #fff; }
 .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #8b6cf0, #4320b5); color: #fff; display: inline-grid; place-items: center; font-weight: 700; font-size: 14px; flex: none; border: 2px solid rgba(255,255,255,.7); }
 .velo { display: none; }
 .principal { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; isolation: isolate; }
-.principal::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 330px; z-index: -1; background: linear-gradient(180deg, rgba(244,245,255,.55), var(--fondo) 96%), url(../img/botica.jpg) right top / cover no-repeat; opacity: .8; }
+.principal::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 330px; z-index: -1; background: linear-gradient(180deg, rgba(244,245,255,.55), var(--fondo) 96%), url(../img/botica.webp) right top / cover no-repeat; opacity: .8; }
 .topbar { display: flex; align-items: center; gap: 16px; height: 68px; padding: 0 28px; background: transparent; position: sticky; top: 0; z-index: 5; backdrop-filter: blur(6px); }
 .buscador { flex: 1; min-width: 0; max-width: 460px; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,.85); border: 1px solid #e0dbf7; border-radius: 999px; padding: 0 16px; height: 42px; color: #7d6fc4; box-shadow: 0 2px 8px rgba(59,31,154,.06); }
 .buscador input { border: 0; background: none; outline: none; flex: 1; font: inherit; font-size: 14px; color: var(--oscuro); min-width: 0; }

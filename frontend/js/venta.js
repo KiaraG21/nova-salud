@@ -273,7 +273,7 @@ function prepararImpresion(r) {
     $('comprobante-impresion').innerHTML = `
       <header class="fac-cabecera">
         <div><div class="fac-franja"></div><h1>factura</h1></div>
-        <img src="img/logo-icon.png" alt="Nova Salud">
+        <img src="img/logo-icon.webp" alt="Nova Salud">
       </header>
       <div class="fac-fila">
         <div class="fac-bloque">
@@ -323,7 +323,7 @@ function prepararImpresion(r) {
   $('comprobante-impresion').innerHTML = `
     <header class="bol-cabecera">
       <div class="bol-empresa">
-        <div class="bol-marca"><img src="img/logo-icon.png" alt=""><div><b>Nova Salud</b><span>BOTICA &amp; SALUD</span></div></div>
+        <div class="bol-marca"><img src="img/logo-icon.webp" alt=""><div><b>Nova Salud</b><span>BOTICA &amp; SALUD</span></div></div>
         <p>Productos farmacéuticos, cuidado personal y atención profesional para toda la familia.</p>
         <p class="bol-dir"><b>Calle Los Nardos Mz. I - Lt. 2, Villa El Salvador 15834</b></p>
         <p class="bol-dir"><b>Telf.: 932 201 559</b></p>
@@ -458,6 +458,43 @@ function reiniciar() {
     if (!ultimaVenta) return;
     prepararImpresion(ultimaVenta);
     window.print();
+  });
+  $('ok-pdf').addEventListener('click', async () => {
+    if (!ultimaVenta) return;
+    const boton = $('ok-pdf');
+    const texto = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = 'Generando…';
+    prepararImpresion(ultimaVenta);
+    const caja = $('comprobante-impresion');
+    // Se muestra fuera de pantalla solo el tiempo de la captura.
+    caja.style.cssText = 'display:block;position:fixed;left:-10000px;top:0;width:760px;background:#fff;color:#111;font:14px Arial,sans-serif';
+    try {
+      const lienzo = await html2canvas(caja, { scale: 2, backgroundColor: '#ffffff' });
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+      const ancho = pdf.internal.pageSize.getWidth() - 20;
+      const alto = (lienzo.height * ancho) / lienzo.width;
+      const altoPagina = pdf.internal.pageSize.getHeight() - 20;
+      const imagen = lienzo.toDataURL('image/jpeg', 0.95);
+      let restante = alto;
+      let y = 10;
+      pdf.addImage(imagen, 'JPEG', 10, y, ancho, alto);
+      while (restante > altoPagina) {
+        restante -= altoPagina;
+        y -= altoPagina;
+        pdf.addPage();
+        pdf.addImage(imagen, 'JPEG', 10, y, ancho, alto);
+      }
+      const tipo = ultimaVenta.tipo_comprobante === 'factura' ? 'Factura' : 'Boleta';
+      pdf.save(`${tipo}-${String(ultimaVenta.venta_id || ultimaVenta.id || '').padStart(6, '0')}.pdf`);
+    } catch (e) {
+      alert('No se pudo generar el PDF. Intenta con Imprimir.');
+    } finally {
+      caja.style.cssText = '';
+      boton.disabled = false;
+      boton.textContent = texto;
+    }
   });
   $('ok-nueva').addEventListener('click', () => { $('m-ok').close(); reiniciar(); cargarProductos(); $('q').focus(); });
 })();

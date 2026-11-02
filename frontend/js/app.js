@@ -81,7 +81,7 @@ async function iniciarApp(activo) {
   document.body.insertAdjacentHTML('afterbegin', `
     <aside class="lateral" id="lateral">
       <div class="lateral-marca">
-        <img src="img/logo-icon-dark.png" alt="" aria-hidden="true">
+        <img src="img/logo-icon-dark.webp" alt="" aria-hidden="true">
         <div><strong>Nova Salud</strong><small>BOTICA &amp; SALUD</small></div>
       </div>
       <nav class="menu-app" aria-label="Menú principal">${items}</nav>

@@ -65,7 +65,7 @@
     medicamentos: {
       title: 'Medicamentos',
       intro: 'Estos productos aparecen en el catálogo de ejemplo. La existencia y los precios se deben confirmar en la botica.',
-      image: 'img/medicamentos.jpg',
+      image: 'img/medicamentos.webp',
       items: [
         ['Paracetamol 500 mg tableta'],
         ['Ibuprofeno 400 mg tableta'],
@@ -91,7 +91,7 @@
     vitaminas: {
       title: 'Vitaminas y suplementos',
       intro: 'Estos suplementos figuran en el catálogo de ejemplo. Consulta cuál es adecuado para ti y verifica su disponibilidad.',
-      image: 'img/vitaminas.jpg',
+      image: 'img/vitaminas.webp',
       items: [
         ['Vitamina C 500 mg tableta'],
         ['Complejo B tableta'],
@@ -101,7 +101,7 @@
     'cuidado-personal': {
       title: 'Cuidado personal',
       intro: 'Algunos productos de cuidado personal registrados en el catálogo de ejemplo:',
-      image: 'img/cuidado.jpg',
+      image: 'img/cuidado.webp',
       items: [
         ['Mascarilla quirúrgica'],
         ['Jabón antibacterial 90 g'],
@@ -112,13 +112,13 @@
     formulas: {
       title: 'Fórmulas infantiles',
       intro: 'Por ahora no hay fórmulas infantiles registradas en el catálogo de ejemplo.',
-      image: 'img/formulas.jpg',
+      image: 'img/formulas.webp',
       emptyMessage: 'Si buscas una fórmula específica, consúltanos por WhatsApp para confirmar si podemos conseguirla. En el catálogo sí figura crema de óxido de zinc para el cuidado de la piel del bebé; consulta su disponibilidad.'
     },
     higiene: {
       title: 'Higiene y primeros auxilios',
       intro: 'Estos artículos aparecen en el catálogo de ejemplo. Confirma existencias antes de acercarte.',
-      image: 'img/higiene.jpg',
+      image: 'img/higiene.webp',
       items: [
         ['Alcohol medicinal 70° 250 ml'],
         ['Agua oxigenada 120 ml'],

@@ -1,4 +1,5 @@
-const API = '../backend/api/';
+// En local la app vive en /frontend/ y en el hosting en la raíz del dominio.
+const API = location.pathname.includes('/frontend/') ? '../backend/api/' : 'backend/api/';
 
 // Devuelve el JSON de la API o lanza un Error con el mensaje para mostrar al usuario.
 async function api(ruta, { method = 'GET', body } = {}) {

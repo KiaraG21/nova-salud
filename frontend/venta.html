@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es-PE">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Punto de Venta · NovaSalud POS</title>
-  <link rel="stylesheet" href="css/estilos.css?v=30">
+  <link rel="stylesheet" href="css/estilos.css?v=31">
 </head>
 <body class="app">
   <div class="principal">
@@ -101,6 +101,7 @@
     <p class="m-ayuda" id="ok-vuelto"></p>
     <div class="m-botones">
       <button class="btn btn-borde" id="ok-imprimir" type="button">Imprimir</button>
+      <button class="btn btn-borde" id="ok-pdf" type="button">Descargar PDF</button>
       <button class="btn btn-cobrar" id="ok-nueva" type="button">Nueva venta</button>
     </div>
   </dialog>
@@ -109,6 +110,8 @@
 
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/venta.js?v=3"></script>
+  <script src="js/vendor/html2canvas.min.js"></script>
+  <script src="js/vendor/jspdf.umd.min.js"></script>
+  <script src="js/venta.js?v=4"></script>
 </body>
 </html>
