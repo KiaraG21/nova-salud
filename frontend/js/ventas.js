@@ -1,6 +1,7 @@
 const POR_PAGINA = 10;
 const PAGO = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', yape: 'Yape', plin: 'Plin', mixto: 'Mixto' };
 const TIPO = { unidad: 'Unidad', blister: 'Blíster', caja: 'Caja' };
+const COMPROBANTE = { boleta: 'Boleta', factura: 'Factura' };
 
 let ventas = [];
 let pagina = 1;
@@ -56,10 +57,11 @@ function dibujar() {
   const desde = (pagina - 1) * POR_PAGINA;
   const vista = ventas.slice(desde, desde + POR_PAGINA);
   $('tabla').innerHTML = `<div class="tabla-wrap"><table class="tabla tabla-cuadro">
-    <thead><tr><th>N.° Venta</th><th>Fecha</th><th>Cliente</th><th class="der">Total</th><th>Medio de Pago</th><th>Estado</th><th class="cen">Acción</th></tr></thead>
+    <thead><tr><th>N.° Venta</th><th>Fecha</th><th>Comprobante</th><th>Cliente</th><th class="der">Total</th><th>Medio de Pago</th><th>Estado</th><th class="cen">Acción</th></tr></thead>
     <tbody>${vista.map((v) => `<tr>
       <td><strong>${v.numero}</strong></td>
       <td>${fechaHora(v.fecha)}</td>
+      <td>${COMPROBANTE[v.tipo_comprobante] || esc(v.tipo_comprobante)}</td>
       <td>${v.cliente ? `${esc(v.cliente)} <small>(${esc(v.cliente_documento)})</small>` : 'Cliente general'}</td>
       <td class="der"><b>${soles(v.total)}</b></td>
       <td>${PAGO[v.medio_pago] || esc(v.medio_pago)}</td>
@@ -95,6 +97,7 @@ async function abrirDetalle(id) {
       <dl class="ficha">
         <div><dt>Fecha</dt><dd>${fechaHora(venta.fecha)}</dd></div>
         <div><dt>Estado</dt><dd>${chipEstado(venta.estado)}</dd></div>
+        <div><dt>Comprobante</dt><dd>${COMPROBANTE[venta.tipo_comprobante] || esc(venta.tipo_comprobante)}</dd></div>
         <div><dt>Cliente</dt><dd>${venta.cliente ? esc(venta.cliente) + ' (' + esc(venta.cliente_documento) + ')' : 'Cliente general'}</dd></div>
         <div><dt>Vendedor</dt><dd>${esc(venta.vendedor)}</dd></div>
         <div><dt>Medio de pago</dt><dd>${PAGO[venta.medio_pago] || esc(venta.medio_pago)}</dd></div>

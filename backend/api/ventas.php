@@ -15,7 +15,7 @@ if (method() === 'GET') {
         fail('No tienes permiso para esta acción', 403);
     }
     if (isset($_GET['id'])) {
-        $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado, v.motivo_anulacion,
+        $st = db()->prepare('SELECT v.id, v.fecha, v.tipo_comprobante, v.medio_pago, v.total, v.estado, v.motivo_anulacion,
                                     v.receta_medico, v.receta_cmp, v.usuario_id, u.nombre AS vendedor, c.nombre AS cliente, c.documento AS cliente_documento
                              FROM ventas v JOIN usuarios u ON u.id = v.usuario_id
                              LEFT JOIN clientes c ON c.id = v.cliente_id WHERE v.id = ?');
@@ -60,7 +60,7 @@ if (method() === 'GET') {
         $where[] = 'v.estado = ?';
         $params[] = (string) $_GET['estado'];
     }
-    $st = db()->prepare('SELECT v.id, v.fecha, v.medio_pago, v.total, v.estado,     u.nombre AS vendedor, c.nombre AS cliente, c.documento AS cliente_documento
+    $st = db()->prepare('SELECT v.id, v.fecha, v.tipo_comprobante, v.medio_pago, v.total, v.estado,     u.nombre AS vendedor, c.nombre AS cliente, c.documento AS cliente_documento
                          FROM ventas v JOIN usuarios u ON u.id = v.usuario_id
                          LEFT JOIN clientes c ON c.id = v.cliente_id
                          WHERE ' . implode(' AND ', $where) . ' ORDER BY v.fecha DESC, v.id DESC LIMIT 500');
@@ -113,6 +113,10 @@ if (method() === 'POST') {
     if (!in_array($medio, ['efectivo', 'tarjeta', 'yape', 'plin', 'mixto'], true)) {
         fail('Medio de pago inválido', 422);
     }
+    $tipoComprobante = (string) ($b['tipo_comprobante'] ?? 'boleta');
+    if (!in_array($tipoComprobante, ['boleta', 'factura'], true)) {
+        fail('Tipo de comprobante inválido', 422);
+    }
     $items = $b['items'] ?? [];
     if (!is_array($items) || count($items) === 0) {
         fail('La venta no tiene productos', 422);
@@ -120,16 +124,21 @@ if (method() === 'POST') {
     $clienteId = !empty($b['cliente_id']) ? (int) $b['cliente_id'] : null;
     $receta = is_array($b['receta'] ?? null) ? $b['receta'] : [];
 
-    $resultado = transaction(function (PDO $pdo) use ($items, $medio, $clienteId, $receta, $u) {
+    $resultado = transaction(function (PDO $pdo) use ($items, $medio, $tipoComprobante, $clienteId, $receta, $u) {
+        $cliente = null;
         if ($clienteId !== null) {
-            $st = $pdo->prepare('SELECT 1 FROM clientes WHERE id = ?');
+            $st = $pdo->prepare('SELECT nombre, documento FROM clientes WHERE id = ?');
             $st->execute([$clienteId]);
-            if (!$st->fetch()) {
+            $cliente = $st->fetch();
+            if (!$cliente) {
                 fail('Cliente no encontrado', 404);
             }
         }
+        if ($tipoComprobante === 'factura' && (!$cliente || !preg_match('/^\d{11}$/', $cliente['documento']))) {
+            fail('Para emitir una factura, registra al cliente con un RUC de 11 dígitos', 422);
+        }
 
-        $stProd = $pdo->prepare('SELECT p.nombre, p.imagen, p.requiere_receta, pr.unidades, pr.precio
+        $stProd = $pdo->prepare('SELECT p.nombre, p.imagen, p.requiere_receta, pr.tipo AS presentacion, pr.unidades, pr.precio
                                  FROM productos p JOIN presentaciones pr ON pr.producto_id = p.id
                                  WHERE p.id = ? AND pr.id = ? AND p.activo = 1');
         // FEFO: primero los lotes que vencen antes; FOR UPDATE bloquea las filas durante la venta
@@ -181,16 +190,20 @@ if (method() === 'POST') {
                 $descuenta->execute([$a['unidades'], $a['lote_id']]);
             }
             $lineas[] = ['producto_id' => $pid, 'presentacion_id' => $presId, 'nombre' => $row['nombre'], 'imagen' => $row['imagen'],
+                         'presentacion' => $row['presentacion'], 'cantidad' => $cant,
                          'precio' => (float) $row['precio'], 'presentacion_unidades' => (int) $row['unidades'],
                          'unidades' => $unidades, 'importe' => $importe, 'asignado' => $asignado];
             $total += $importe;
         }
         $total = round($total, 2);
 
-        $pdo->prepare('INSERT INTO ventas (usuario_id, cliente_id, medio_pago, total, receta_medico, receta_cmp) VALUES (?,?,?,?,?,?)')
-            ->execute([$u['id'], $clienteId, $medio, $total,
+        $pdo->prepare('INSERT INTO ventas (usuario_id, cliente_id, tipo_comprobante, medio_pago, total, receta_medico, receta_cmp) VALUES (?,?,?,?,?,?,?)')
+            ->execute([$u['id'], $clienteId, $tipoComprobante, $medio, $total,
                        trim((string) ($receta['medico'] ?? '')) ?: null, trim((string) ($receta['cmp'] ?? '')) ?: null]);
         $ventaId = (int) $pdo->lastInsertId();
+        $stFecha = $pdo->prepare('SELECT fecha FROM ventas WHERE id = ?');
+        $stFecha->execute([$ventaId]);
+        $fecha = $stFecha->fetchColumn();
 
         $insD = $pdo->prepare('INSERT INTO detalle_venta (venta_id, producto_id, lote_id, presentacion_id, cantidad, unidades_descontadas, precio, subtotal) VALUES (?,?,?,?,?,?,?,?)');
         $comprobante = [];
@@ -204,12 +217,16 @@ if (method() === 'POST') {
                 $insD->execute([$ventaId, $ln['producto_id'], $a['lote_id'], $ln['presentacion_id'],
                                 round($a['unidades'] / $ln['presentacion_unidades'], 3), $a['unidades'], $ln['precio'], $sub]);
             }
-            $comprobante[] = ['producto' => $ln['nombre'], 'imagen' => $ln['imagen'], 'unidades' => $ln['unidades'], 'importe' => $ln['importe'],
+            $comprobante[] = ['producto' => $ln['nombre'], 'imagen' => $ln['imagen'], 'cantidad' => $ln['cantidad'],
+                              'presentacion' => $ln['presentacion'], 'precio' => $ln['precio'], 'unidades' => $ln['unidades'], 'importe' => $ln['importe'],
                               'lotes' => array_column($ln['asignado'], 'numero_lote')];
         }
         audit($pdo, $u['id'], 'venta', 'venta', $ventaId, null, ['total' => $total, 'medio_pago' => $medio, 'lineas' => count($lineas)]);
         sincronizar_alertas($pdo);
-        return ['venta_id' => $ventaId, 'total' => $total, 'medio_pago' => $medio, 'items' => $comprobante];
+        return ['venta_id' => $ventaId, 'fecha' => $fecha, 'tipo_comprobante' => $tipoComprobante,
+                'medio_pago' => $medio, 'cliente' => $cliente['nombre'] ?? null,
+                'cliente_documento' => $cliente['documento'] ?? null, 'vendedor' => $u['nombre'],
+                'total' => $total, 'items' => $comprobante];
     });
     respond($resultado, 201);
 }

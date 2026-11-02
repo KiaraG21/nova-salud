@@ -143,20 +143,22 @@ Respuesta `201`: `{ compra_id, total, lotes: [ids] }`. Rechaza vencimientos de h
 **POST** (vendedor o administrador): registra una venta.
 
 ```json
-{ "medio_pago": "yape", "cliente_id": 2,
+{ "medio_pago": "yape", "tipo_comprobante": "boleta", "cliente_id": 2,
   "receta": { "medico": "Dr. Juan Pérez", "cmp": "12345" },
   "items": [ { "producto_id": 1, "presentacion_id": 2, "cantidad": 5 } ] }
 ```
 
-- `medio_pago`: `efectivo`, `tarjeta`, `yape`, `plin` o `mixto`. `cliente_id` y `receta` son opcionales.
+- `medio_pago`: `efectivo`, `tarjeta`, `yape`, `plin` o `mixto`. `tipo_comprobante`: `boleta` o `factura` (por defecto `boleta`). `cliente_id` y `receta` son opcionales.
+- La factura requiere que el cliente tenga un RUC de 11 dígitos. El comprobante generado es solo un formato de impresión interno; no se transmite ni valida ante SUNAT.
+- Para actualizar una instalación existente, ejecuta una vez `database/migrations/001_tipo_comprobante.sql` en la base `nova_salud`. Las instalaciones nuevas ya incluyen el campo en `database/nova_salud.sql`.
 - Si algún producto requiere receta, `receta.medico` es obligatorio (`422`).
 - `cantidad` es en la presentación elegida (5 blísteres de 10 = 50 unidades descontadas).
 - El sistema asigna los lotes (FEFO). Si falta stock responde `409` con un mensaje como "Stock insuficiente de «Azitromicina…»: faltan 8 unidades" y **no descuenta nada**.
-- Respuesta `201`: `{ venta_id, total, medio_pago, items: [{ producto, unidades, importe, lotes: ["PA-2401"] }] }` (sirve para el comprobante).
+- Respuesta `201`: `{ venta_id, fecha, tipo_comprobante, medio_pago, cliente, cliente_documento, vendedor, total, items: [{ producto, cantidad, presentacion, precio, unidades, importe, lotes: ["PA-2401"] }] }` (sirve para el comprobante).
 
-**GET `?id=3`** (vendedor o administrador): venta con `numero`, vendedor, cliente, receta, `estado` (`emitida` o `anulada`), `motivo_anulacion` y `detalle: [{ producto, presentacion, cantidad, unidades_descontadas, numero_lote, precio, subtotal }]`. El vendedor solo puede ver las suyas.
+**GET `?id=3`** (vendedor o administrador): venta con `numero`, `tipo_comprobante`, vendedor, cliente, receta, `estado` (`emitida` o `anulada`), `motivo_anulacion` y `detalle: [{ producto, presentacion, cantidad, unidades_descontadas, numero_lote, precio, subtotal }]`. El vendedor solo puede ver las suyas.
 
-**GET `?desde=&hasta=`** (por defecto, hoy): listado con `numero, fecha, vendedor, cliente, cliente_documento, medio_pago, total, estado`. El vendedor ve solo sus ventas. El administrador puede filtrar por `vendedor_id`, `medio_pago` y `estado`.
+**GET `?desde=&hasta=`** (por defecto, hoy): listado con `numero, fecha, tipo_comprobante, vendedor, cliente, cliente_documento, medio_pago, total, estado`. El vendedor ve solo sus ventas. El administrador puede filtrar por `vendedor_id`, `medio_pago` y `estado`.
 
 **POST `?accion=anular&id=3`** (administrador): cuerpo `{ motivo }`. Devuelve el stock a los lotes. `409` si ya estaba anulada.
 

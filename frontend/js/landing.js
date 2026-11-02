@@ -1,4 +1,28 @@
 (() => {
+  const pantallaCarga = document.getElementById('pantalla-carga');
+  if (pantallaCarga) {
+    const duracionMinima = 650;
+    const inicioCarga = performance.now();
+    const ocultarPantallaCarga = () => {
+      const espera = Math.max(0, duracionMinima - (performance.now() - inicioCarga));
+      window.setTimeout(() => {
+        pantallaCarga.classList.add('oculta');
+        pantallaCarga.setAttribute('aria-hidden', 'true');
+        window.setTimeout(() => {
+          pantallaCarga.hidden = true;
+          document.body.classList.remove('cargando');
+          document.body.setAttribute('aria-busy', 'false');
+        }, 350);
+      }, espera);
+    };
+
+    if (document.readyState === 'complete') {
+      ocultarPantallaCarga();
+    } else {
+      window.addEventListener('load', ocultarPantallaCarga, { once: true });
+    }
+  }
+
   const consejos = {
     alimentacion: {
       title: 'Alimentación balanceada',
@@ -240,6 +264,26 @@
       productModal.close();
     }
   });
+
+  const header = document.querySelector('.encabezado');
+  if (header) {
+    const syncHeader = () => header.classList.toggle('con-scroll', window.scrollY > 10);
+    window.addEventListener('scroll', syncHeader, { passive: true });
+    syncHeader();
+  }
+
+  const aboutModal =  document.querySelector('.nosotros-modal');
+  const aboutButton = document.querySelector('.nosotros-abrir');
+  if (aboutModal && aboutButton) {
+    aboutButton.addEventListener('click', () => aboutModal.showModal());
+    aboutModal.querySelector('.consejo-modal-cerrar').addEventListener('click', () => aboutModal.close());
+    aboutModal.addEventListener('click', event => {
+      if (event.target === aboutModal) {
+        aboutModal.close();
+      }
+    });
+    aboutModal.addEventListener('close', () => aboutButton.focus());
+  }
 
   const items = document.querySelectorAll(
     '.landing .titulo, .landing .nosotros .contenedor > *, .landing .ventajas li, .landing .serv, .landing .prod, .landing .consejo, .landing .contacto .info, .landing .mapa, .landing .visitanos'

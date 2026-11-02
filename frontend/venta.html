@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es-PE">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Punto de Venta · NovaSalud POS</title>
-  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="css/estilos.css?v=30">
 </head>
 <body class="app">
   <div class="principal">
@@ -60,13 +60,20 @@
       </fieldset>
 
       <fieldset class="m-bloque">
-        <legend>Cliente <small>(opcional)</small></legend>
+        <legend>Cliente <small id="cliente-requerido">(opcional)</small></legend>
+        <label class="m-comprobante" for="tipo-comprobante">Tipo de comprobante
+          <select id="tipo-comprobante">
+            <option value="boleta">Boleta de venta</option>
+            <option value="factura">Factura</option>
+          </select>
+        </label>
         <div class="m-fila">
           <input id="documento" inputmode="numeric" maxlength="11" placeholder="DNI (8) o RUC (11)" aria-label="Documento del cliente">
           <button class="btn btn-borde" id="buscar-cli" type="button">Buscar</button>
         </div>
         <p class="m-ayuda" id="cli-estado">Sin cliente: se registra como «Cliente general».</p>
         <input id="cli-nombre" placeholder="Nombre del nuevo cliente" aria-label="Nombre del nuevo cliente" hidden>
+        <p class="m-ayuda">Formato de impresión interno; no se transmite ni valida ante SUNAT.</p>
       </fieldset>
 
       <fieldset class="m-bloque" id="m-receta" hidden>
@@ -98,8 +105,10 @@
     </div>
   </dialog>
 
+  <section id="comprobante-impresion" class="comprobante-impresion" aria-label="Comprobante de venta"></section>
+
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/venta.js"></script>
+  <script src="js/venta.js?v=3"></script>
 </body>
 </html>

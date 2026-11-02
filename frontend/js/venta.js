@@ -1,11 +1,13 @@
 const IGV = 0.18;
 const TIPO = { unidad: 'Unidad', blister: 'Blíster', caja: 'Caja' };
+const MEDIO_PAGO = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', yape: 'Yape', plin: 'Plin', mixto: 'Mixto' };
 
 let productos = [];
 let categoriaActiva = 0;
 let carrito = []; // { producto, pres, cantidad }
 let clienteId = null;
 let ultimoVuelto = '';
+let ultimaVenta = null;
 
 const $ = (id) => document.getElementById(id);
 const centimos = (n) => Math.round(Number(n) * 100);
@@ -160,10 +162,11 @@ function actualizarVuelto() {
 async function buscarCliente() {
   const doc = $('documento').value.trim();
   const estado = $('cli-estado');
+  const esFactura = $('tipo-comprobante').value === 'factura';
   clienteId = null;
   $('cli-nombre').hidden = true;
-  if (!/^(\d{8}|\d{11})$/.test(doc)) {
-    estado.textContent = 'Ingresa un DNI de 8 dígitos o un RUC de 11.';
+  if (esFactura ? !/^\d{11}$/.test(doc) : !/^(\d{8}|\d{11})$/.test(doc)) {
+    estado.textContent = esFactura ? 'Para una factura, ingresa un RUC de 11 dígitos.' : 'Ingresa un DNI de 8 dígitos o un RUC de 11.';
     estado.className = 'm-ayuda mal';
     return;
   }
@@ -200,6 +203,12 @@ async function confirmarCobro(ev) {
   if (conReceta && !medico) { errorCobro('Ingresa el nombre del médico: hay productos que requieren receta.'); $('medico').focus(); return; }
 
   const doc = $('documento').value.trim();
+  const tipoComprobante = $('tipo-comprobante').value;
+  if (tipoComprobante === 'factura' && !/^\d{11}$/.test(doc)) {
+    errorCobro('Para emitir una factura, ingresa el RUC de 11 dígitos del cliente.');
+    $('documento').focus();
+    return;
+  }
   if (doc && !clienteId && $('cli-nombre').hidden) { errorCobro('Busca al cliente o borra el documento para vender como «Cliente general».'); return; }
   if (doc && !clienteId && !$('cli-nombre').value.trim()) { errorCobro('Escribe el nombre del nuevo cliente.'); $('cli-nombre').focus(); return; }
 
@@ -213,6 +222,7 @@ async function confirmarCobro(ev) {
     }
     const cuerpo = {
       medio_pago: pago,
+      tipo_comprobante: tipoComprobante,
       items: carrito.map((l) => ({ producto_id: l.producto.id, presentacion_id: l.pres.id, cantidad: l.cantidad })),
     };
     if (cid) cuerpo.cliente_id = cid;
@@ -235,6 +245,7 @@ async function confirmarCobro(ev) {
 }
 
 function mostrarExito(r) {
+  ultimaVenta = r;
   $('ok-numero').textContent = 'N.° ' + 'V-' + String(r.venta_id).padStart(4, '0');
   $('ok-lista').innerHTML = r.items.map((i) => `<li><span class="prod-celda">${fotoProd(i.imagen)}<span>${esc(i.producto)}</span></span><b>${soles(i.importe)}</b></li>`).join('');
   $('ok-total').textContent = soles(r.total);
@@ -242,9 +253,114 @@ function mostrarExito(r) {
   $('m-ok').showModal();
 }
 
+function prepararImpresion(r) {
+  const esFactura = r.tipo_comprobante === 'factura';
+  const numero = 'V-' + String(r.venta_id).padStart(4, '0');
+  const fecha = fechaHora(r.fecha);
+  const total = Number(r.total);
+  const subtotal = Math.round(total / 1.18 * 100) / 100;
+  const igv = Math.round((total - subtotal) * 100) / 100;
+  const pago = esc(MEDIO_PAGO[r.medio_pago] || r.medio_pago);
+  if (esFactura) {
+    const lineasFactura = r.items.map((item) => `
+      <tr>
+        <td>${Number(item.cantidad).toLocaleString('es-PE')}</td>
+        <td>${esc(item.producto)} <span>${esc(item.presentacion)}</span></td>
+        <td class="numero">${Number(item.precio).toFixed(2)}</td>
+        <td class="numero">${Number(item.importe).toFixed(2)}</td>
+      </tr>`).join('');
+    $('comprobante-impresion').className = 'comprobante-impresion comprobante-factura';
+    $('comprobante-impresion').innerHTML = `
+      <header class="fac-cabecera">
+        <div><div class="fac-franja"></div><h1>factura</h1></div>
+        <img src="img/logo-icon.png" alt="Nova Salud">
+      </header>
+      <div class="fac-fila">
+        <div class="fac-bloque">
+          <h3>DE</h3>
+          <p>Nova Salud Botica<br>Calle Los Nardos Mz. I - Lt. 2<br>Villa El Salvador 15834<br>Tel. 932 201 559</p>
+        </div>
+        <dl class="fac-meta">
+          <div><dt>N° DE FACTURA</dt><dd>F001-${String(r.venta_id).padStart(6, '0')}</dd></div>
+          <div><dt>FECHA</dt><dd>${esc(fecha)}</dd></div>
+          <div><dt>ATENDIDO POR</dt><dd>${esc(r.vendedor || '-')}</dd></div>
+          <div><dt>MEDIO DE PAGO</dt><dd>${pago}</dd></div>
+        </dl>
+      </div>
+      <div class="fac-bloque fac-cliente">
+        <h3>FACTURAR A</h3>
+        <p>${esc(r.cliente || 'Cliente general')}<br>RUC: ${esc(r.cliente_documento || '-')}</p>
+      </div>
+      <table class="fac-tabla">
+        <thead><tr><th>CANT.</th><th>DESCRIPCIÓN</th><th class="numero">PRECIO UNITARIO</th><th class="numero">IMPORTE</th></tr></thead>
+        <tbody>${lineasFactura}</tbody>
+      </table>
+      <dl class="fac-subtotales">
+        <div><dt>Subtotal</dt><dd>${subtotal.toFixed(2)}</dd></div>
+        <div><dt>IGV 18.0%</dt><dd>${igv.toFixed(2)}</dd></div>
+      </dl>
+      <div class="fac-total"><span>TOTAL</span><b>S/ ${total.toFixed(2)}</b></div>
+      <div class="fac-condiciones">
+        <h3>CONDICIONES Y FORMA DE PAGO</h3>
+        <p>Pago realizado: ${pago}.</p>
+        <p class="fac-nota">Formato de impresión interno. No es un comprobante electrónico autorizado ni transmitido a SUNAT.</p>
+      </div>`;
+    return;
+  }
+  const FILAS_MIN = 10;
+  const filasBoleta = r.items.map((item) => `
+    <tr>
+      <td class="centro">${Number(item.cantidad).toLocaleString('es-PE')}</td>
+      <td>${esc(item.producto)} <span>${esc(item.presentacion)}</span></td>
+      <td class="numero">${Number(item.precio).toFixed(2)}</td>
+      <td class="numero">${Number(item.importe).toFixed(2)}</td>
+    </tr>`).join('') + Array.from({ length: Math.max(0, FILAS_MIN - r.items.length) }, () => '<tr class="vacia"><td></td><td></td><td></td><td></td></tr>').join('');
+  const f = new Date(String(r.fecha).replace(' ', 'T'));
+  const dia = isNaN(f) ? '' : String(f.getDate()).padStart(2, '0');
+  const mes = isNaN(f) ? '' : String(f.getMonth() + 1).padStart(2, '0');
+  const anio = isNaN(f) ? '' : String(f.getFullYear());
+  $('comprobante-impresion').className = 'comprobante-impresion comprobante-boleta';
+  $('comprobante-impresion').innerHTML = `
+    <header class="bol-cabecera">
+      <div class="bol-empresa">
+        <div class="bol-marca"><img src="img/logo-icon.png" alt=""><div><b>Nova Salud</b><span>BOTICA &amp; SALUD</span></div></div>
+        <p>Productos farmacéuticos, cuidado personal y atención profesional para toda la familia.</p>
+        <p class="bol-dir"><b>Calle Los Nardos Mz. I - Lt. 2, Villa El Salvador 15834</b></p>
+        <p class="bol-dir"><b>Telf.: 932 201 559</b></p>
+      </div>
+      <div class="bol-recuadro">
+        <div class="bol-titulo">BOLETA DE VENTA</div>
+        <div class="bol-numero">B001-${String(r.venta_id).padStart(6, '0')}</div>
+        <div class="bol-fecha">
+          <div><span>DÍA</span><b>${dia}</b></div>
+          <div><span>MES</span><b>${mes}</b></div>
+          <div><span>AÑO</span><b>${anio}</b></div>
+        </div>
+      </div>
+    </header>
+    <div class="bol-linea"><span>Sr.(es):</span><b>${esc(r.cliente || 'Cliente general')}</b></div>
+    <div class="bol-linea bol-doble">
+      <div><span>Atendido por:</span><b>${esc(r.vendedor || '')}</b></div>
+      <div><span>${r.cliente_documento && r.cliente_documento.length === 11 ? 'R.U.C.:' : 'D.N.I.:'}</span><b>${esc(r.cliente_documento || '')}</b></div>
+    </div>
+    <table class="bol-tabla">
+      <thead><tr><th>CANT.</th><th>DESCRIPCIÓN</th><th>P. UNIT.</th><th>IMPORTE</th></tr></thead>
+      <tbody>${filasBoleta}</tbody>
+    </table>
+    <div class="bol-pie">
+      <div class="bol-gracias"><em>Gracias por su preferencia</em><small>Medio de pago: ${pago}</small></div>
+      <div class="bol-total"><span>TOTAL S/</span><b>${total.toFixed(2)}</b></div>
+    </div>
+    <footer class="bol-nota">Formato de impresión interno. No es un comprobante electrónico autorizado ni transmitido a SUNAT.</footer>`;
+}
+
 function reiniciar() {
   carrito = [];
   clienteId = null;
+  ultimaVenta = null;
+  $('tipo-comprobante').value = 'boleta';
+  $('cliente-requerido').textContent = '(opcional)';
+  $('documento').placeholder = 'DNI (8) o RUC (11)';
   $('documento').value = '';
   $('cli-nombre').value = '';
   $('cli-nombre').hidden = true;
@@ -326,9 +442,22 @@ function reiniciar() {
     $('cli-estado').textContent = 'Sin cliente: se registra como «Cliente general».';
     $('cli-estado').className = 'm-ayuda';
   });
+  $('tipo-comprobante').addEventListener('change', () => {
+    const esFactura = $('tipo-comprobante').value === 'factura';
+    $('documento').placeholder = esFactura ? 'RUC (11 dígitos, obligatorio)' : 'DNI (8) o RUC (11)';
+    $('cliente-requerido').textContent = esFactura ? '(RUC obligatorio)' : '(opcional)';
+    $('cli-estado').textContent = esFactura
+      ? 'Para una factura debes identificar al cliente con su RUC de 11 dígitos.'
+      : 'Sin cliente: se registra como «Cliente general».';
+    $('cli-estado').className = 'm-ayuda';
+  });
   $('f-cobro').addEventListener('submit', confirmarCobro);
   $('m-volver').addEventListener('click', () => $('m-cobro').close());
 
-  $('ok-imprimir').addEventListener('click', () => window.print());
+  $('ok-imprimir').addEventListener('click', () => {
+    if (!ultimaVenta) return;
+    prepararImpresion(ultimaVenta);
+    window.print();
+  });
   $('ok-nueva').addEventListener('click', () => { $('m-ok').close(); reiniciar(); cargarProductos(); $('q').focus(); });
 })();

@@ -40,7 +40,7 @@ form.addEventListener('submit', async (e) => {
   } catch (err) {
     mostrarError(err.message);
     enviar.disabled = false;
-    enviar.textContent = 'Iniciar sesión';
+    enviar.textContent = 'Ingresar';
     password.value = '';
     password.focus();
   }

@@ -81,11 +81,7 @@ async function iniciarApp(activo) {
   document.body.insertAdjacentHTML('afterbegin', `
     <aside class="lateral" id="lateral">
       <div class="lateral-marca">
-        <svg viewBox="0 0 72 60" width="46" height="38" aria-hidden="true">
-          <defs><linearGradient id="hoja-m" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#16a34a"/><stop offset="1" stop-color="#86efac"/></linearGradient></defs>
-          <path d="M24 2h14v16h14v14H38v14H24V32H10V18h14z" fill="#fff"/>
-          <path d="M40 56C38 38 48 24 68 20 70 40 60 54 40 56z" fill="url(#hoja-m)" stroke="#2d1a78" stroke-width="2"/>
-        </svg>
+        <img src="img/logo-icon-dark.png" alt="" aria-hidden="true">
         <div><strong>Nova Salud</strong><small>BOTICA &amp; SALUD</small></div>
       </div>
       <nav class="menu-app" aria-label="Menú principal">${items}</nav>
@@ -204,4 +200,3 @@ function mostrarInsignias(n) {
     el.hidden = !n;
   });
 }
-

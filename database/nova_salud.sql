@@ -91,6 +91,7 @@ CREATE TABLE ventas (
   usuario_id INT NOT NULL,
   cliente_id INT NULL,
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  tipo_comprobante ENUM('boleta','factura') NOT NULL DEFAULT 'boleta',
   medio_pago ENUM('efectivo','tarjeta','yape','plin','mixto') NOT NULL,
   total DECIMAL(10,2) NOT NULL,
   estado ENUM('emitida','anulada') NOT NULL DEFAULT 'emitida',
