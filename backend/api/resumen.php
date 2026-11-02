@@ -25,6 +25,22 @@ $stock_bajo = (int) $pdo->query('SELECT COUNT(*) FROM v_stock_producto WHERE baj
 $por_vencer = (int) $pdo->query('SELECT COUNT(DISTINCT l.producto_id) FROM v_lotes_por_vencer v JOIN lotes l ON l.id = v.lote_id WHERE v.dias_restantes >= 0')->fetchColumn();
 $vencidos = (int) $pdo->query('SELECT COUNT(DISTINCT l.producto_id) FROM v_lotes_por_vencer v JOIN lotes l ON l.id = v.lote_id WHERE v.dias_restantes < 0')->fetchColumn();
 
+$lotes_por_vencer = (int) $pdo->query('SELECT COUNT(*) FROM v_lotes_por_vencer WHERE dias_restantes >= 0')->fetchColumn();
+$alertas_activas = (int) $pdo->query("SELECT COUNT(*) FROM alertas WHERE estado = 'activa'")->fetchColumn();
+$productos_en_stock = (int) $pdo->query('SELECT COUNT(*) FROM v_stock_producto WHERE stock_vigente > 0')->fetchColumn();
+
+$por_dia = [];
+foreach ($pdo->query("SELECT DATE(fecha) AS dia, SUM(total) AS total FROM ventas
+                      WHERE estado = 'emitida' AND DATE(fecha) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) $filtro
+                      GROUP BY DATE(fecha)") as $f) {
+    $por_dia[$f['dia']] = (float) $f['total'];
+}
+$ventas_7_dias = [];
+for ($i = 6; $i >= 0; $i--) {
+    $dia = date('Y-m-d', strtotime("-$i day"));
+    $ventas_7_dias[] = ['fecha' => $dia, 'total' => $por_dia[$dia] ?? 0.0];
+}
+
 $recientes = $pdo->query("SELECT v.id, v.fecha, c.nombre AS cliente, v.total, v.medio_pago, v.estado
                           FROM ventas v LEFT JOIN clientes c ON c.id = v.cliente_id
                           WHERE 1 = 1 " . str_replace('usuario_id', 'v.usuario_id', $filtro) . "
@@ -35,7 +51,7 @@ foreach ($recientes as &$v) {
 }
 unset($v);
 
-$alertas = $pdo->query("SELECT a.id, a.tipo, p.nombre AS producto, a.mensaje, a.fecha
+$alertas = $pdo->query("SELECT a.id, a.tipo, p.nombre AS producto, p.imagen, a.mensaje, a.fecha
                         FROM alertas a JOIN productos p ON p.id = a.producto_id
                         WHERE a.estado = 'activa'
                         ORDER BY FIELD(a.tipo, 'vencido', 'stock_bajo', 'por_vencer'), a.fecha DESC LIMIT 5")->fetchAll();
@@ -45,6 +61,10 @@ respond([
     'stock_bajo' => $stock_bajo,
     'por_vencer_60_dias' => $por_vencer,
     'vencidos' => $vencidos,
+    'lotes_por_vencer' => $lotes_por_vencer,
+    'alertas_activas' => $alertas_activas,
+    'productos_en_stock' => $productos_en_stock,
+    'ventas_7_dias' => $ventas_7_dias,
     'ventas_recientes' => $recientes,
     'alertas_recientes' => castear($alertas, ['id']),
 ]);

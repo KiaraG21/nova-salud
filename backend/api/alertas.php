@@ -6,7 +6,7 @@ require __DIR__ . '/../src/helpers.php';
 if (method() === 'GET') {
     require_login();
     sincronizar_alertas(db());
-    $st = db()->query("SELECT a.id, a.tipo, a.producto_id, p.nombre AS producto, a.lote_id, l.numero_lote, a.mensaje, a.fecha
+    $st = db()->query("SELECT a.id, a.tipo, a.producto_id, p.nombre AS producto, p.imagen, a.lote_id, l.numero_lote, a.mensaje, a.fecha
                        FROM alertas a JOIN productos p ON p.id = a.producto_id
                        LEFT JOIN lotes l ON l.id = a.lote_id
                        WHERE a.estado = 'activa'

@@ -21,16 +21,16 @@ if ($tipo === 'ventas_dia') {
 }
 
 if ($tipo === 'top_productos') {
-    $st = db()->prepare("SELECT p.nombre, SUM(d.unidades_descontadas) AS unidades, SUM(d.subtotal) AS ingresos
+    $st = db()->prepare("SELECT p.nombre, p.imagen, SUM(d.unidades_descontadas) AS unidades, SUM(d.subtotal) AS ingresos
                          FROM detalle_venta d JOIN ventas v ON v.id = d.venta_id JOIN productos p ON p.id = d.producto_id
                          WHERE v.estado = 'emitida' AND v.fecha >= ? AND v.fecha < DATE_ADD(?, INTERVAL 1 DAY)
-                         GROUP BY p.id, p.nombre ORDER BY unidades DESC LIMIT 10");
+                         GROUP BY p.id, p.nombre, p.imagen ORDER BY unidades DESC LIMIT 10");
     $st->execute([$desde, $hasta]);
     respond(['desde' => $desde, 'hasta' => $hasta, 'filas' => castear($st->fetchAll(), ['ventas', 'unidades'], ['total', 'ingresos'])]);
 }
 
 if ($tipo === 'stock_critico') {
-    $st = db()->query('SELECT producto_id, nombre, stock_vigente, stock_minimo FROM v_stock_producto WHERE bajo_minimo = 1 ORDER BY nombre');
+    $st = db()->query('SELECT s.producto_id, s.nombre, p.imagen, s.stock_vigente, s.stock_minimo FROM v_stock_producto s JOIN productos p ON p.id = s.producto_id WHERE s.bajo_minimo = 1 ORDER BY s.nombre');
     respond(['filas' => castear($st->fetchAll(), ['producto_id', 'stock_vigente', 'stock_minimo'])]);
 }
 

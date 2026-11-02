@@ -1,5 +1,5 @@
 <?php
-// GET  /api/lotes.php?producto_id=1   lotes de un producto, el que vence primero arriba
+// GET  /api/lotes.php                 lotes (filtros: producto_id, q, estado, limit, offset), el que vence primero arriba
 // POST /api/lotes.php                 ingreso de mercadería (almacén)
 //   {proveedor_id, items:[{producto_id, numero_lote, fecha_vencimiento:"YYYY-MM-DD", cantidad, costo_unitario}]}
 require __DIR__ . '/../src/helpers.php';
@@ -7,14 +7,49 @@ require __DIR__ . '/../src/helpers.php';
 if (method() === 'GET') {
     require_login();
     $pid = (int) ($_GET['producto_id'] ?? 0);
-    if ($pid < 1) {
-        fail('Indica producto_id', 422);
+    $where = [];
+    $args = [];
+    if ($pid > 0) {
+        $where[] = 'l.producto_id = ?';
+        $args[] = $pid;
     }
-    $st = db()->prepare('SELECT id, numero_lote, fecha_vencimiento, cantidad_inicial, cantidad_disponible, costo_unitario,
-                                DATEDIFF(fecha_vencimiento, CURDATE()) AS dias_restantes
-                         FROM lotes WHERE producto_id = ? ORDER BY fecha_vencimiento, id');
-    $st->execute([$pid]);
-    respond(['lotes' => castear($st->fetchAll(), ['id', 'cantidad_inicial', 'cantidad_disponible', 'dias_restantes'], ['costo_unitario'])]);
+    $q = trim((string) ($_GET['q'] ?? ''));
+    if ($q !== '') {
+        $where[] = '(l.numero_lote LIKE ? OR p.nombre LIKE ?)';
+        $args[] = "%$q%";
+        $args[] = "%$q%";
+    }
+    $estados = [
+        'vigente' => 'l.fecha_vencimiento > DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND l.cantidad_disponible > 0',
+        'por_vencer' => 'l.fecha_vencimiento >= CURDATE() AND l.fecha_vencimiento <= DATE_ADD(CURDATE(), INTERVAL 60 DAY) AND l.cantidad_disponible > 0',
+        'vencido' => 'l.fecha_vencimiento < CURDATE() AND l.cantidad_disponible > 0',
+        'agotado' => 'l.cantidad_disponible = 0',
+    ];
+    $estado = (string) ($_GET['estado'] ?? '');
+    if ($estado !== '') {
+        if (!isset($estados[$estado])) {
+            fail('Estado no válido', 422);
+        }
+        $where[] = '(' . $estados[$estado] . ')';
+    }
+    $sqlWhere = $where ? 'WHERE ' . implode(' AND ', $where) : '';
+    $limit = max(1, min(200, (int) ($_GET['limit'] ?? 200)));
+    $offset = max(0, (int) ($_GET['offset'] ?? 0));
+
+    $cnt = db()->prepare("SELECT COUNT(*) FROM lotes l JOIN productos p ON p.id = l.producto_id $sqlWhere");
+    $cnt->execute($args);
+    $total = (int) $cnt->fetchColumn();
+
+    $st = db()->prepare("SELECT l.id, l.producto_id, p.nombre AS producto, p.imagen, l.numero_lote, l.fecha_vencimiento,
+                                DATE(l.creado_en) AS fecha_ingreso, l.cantidad_inicial, l.cantidad_disponible, l.costo_unitario,
+                                DATEDIFF(l.fecha_vencimiento, CURDATE()) AS dias_restantes
+                         FROM lotes l JOIN productos p ON p.id = l.producto_id $sqlWhere
+                         ORDER BY l.fecha_vencimiento, l.id LIMIT $limit OFFSET $offset");
+    $st->execute($args);
+    respond([
+        'total' => $total,
+        'lotes' => castear($st->fetchAll(), ['id', 'producto_id', 'cantidad_inicial', 'cantidad_disponible', 'dias_restantes'], ['costo_unitario']),
+    ]);
 }
 
 if (method() === 'POST') {

@@ -163,7 +163,8 @@ function audit(PDO $pdo, ?int $usuarioId, string $accion, string $entidad, ?int 
 /** Crea las alertas que falten y cierra las que ya no aplican. */
 function sincronizar_alertas(PDO $pdo): void
 {
-    // Stock bajo
+    // Una alerta atendida a mano no se vuelve a crear mientras la condición siga igual;
+    // cuando la condición desaparece pasa a 'resuelta' y, si vuelve, se genera una nueva.
     $pdo->exec("
         INSERT INTO alertas (tipo, producto_id, mensaje)
         SELECT 'stock_bajo', s.producto_id,
@@ -171,7 +172,7 @@ function sincronizar_alertas(PDO $pdo): void
         FROM v_stock_producto s
         WHERE s.bajo_minimo = 1
           AND NOT EXISTS (SELECT 1 FROM alertas a
-                          WHERE a.tipo = 'stock_bajo' AND a.estado = 'activa' AND a.producto_id = s.producto_id)");
+                          WHERE a.tipo = 'stock_bajo' AND a.estado IN ('activa','atendida') AND a.producto_id = s.producto_id)");
     // Lotes por vencer y vencidos
     $pdo->exec("
         INSERT INTO alertas (tipo, producto_id, lote_id, mensaje)
@@ -180,16 +181,17 @@ function sincronizar_alertas(PDO $pdo): void
                       ' · lote ', v.numero_lote, ' (', v.fecha_vencimiento, ')')
         FROM v_lotes_por_vencer v JOIN lotes l ON l.id = v.lote_id
         WHERE NOT EXISTS (SELECT 1 FROM alertas a
-                          WHERE a.lote_id = v.lote_id AND a.estado = 'activa'
+                          WHERE a.lote_id = v.lote_id AND a.estado IN ('activa','atendida')
                             AND a.tipo = IF(v.dias_restantes < 0, 'vencido', 'por_vencer'))");
     // Cerrar alertas de stock que ya se resolvieron
     $pdo->exec("
-        UPDATE alertas SET estado = 'atendida'
-        WHERE tipo = 'stock_bajo' AND estado = 'activa'
+        UPDATE alertas SET estado = 'resuelta'
+        WHERE tipo = 'stock_bajo' AND estado IN ('activa','atendida')
           AND producto_id IN (SELECT producto_id FROM v_stock_producto WHERE bajo_minimo = 0)");
-    // Cerrar alertas de lotes agotados
+    // Cerrar alertas de lotes agotados, y las "por vencer" de lotes que ya vencieron (ahora tienen su alerta de vencido)
     $pdo->exec("
         UPDATE alertas a JOIN lotes l ON l.id = a.lote_id
-        SET a.estado = 'atendida'
-        WHERE a.estado = 'activa' AND a.tipo IN ('por_vencer','vencido') AND l.cantidad_disponible = 0");
+        SET a.estado = 'resuelta'
+        WHERE a.estado IN ('activa','atendida') AND a.tipo IN ('por_vencer','vencido')
+          AND (l.cantidad_disponible = 0 OR (a.tipo = 'por_vencer' AND l.fecha_vencimiento < CURDATE()))");
 }

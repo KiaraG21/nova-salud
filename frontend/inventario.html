@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inventario y Lotes · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="app">
+  <div class="principal">
+    <header class="topbar" id="topbar"></header>
+    <main class="contenido" id="contenido">
+      <section class="panel lista">
+        <div class="panel-cab">
+          <h2>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5zM3 8v8l9 5 9-5V8"/></svg>
+            Inventario <span class="pastilla">Lotes</span>
+          </h2>
+          <button class="btn btn-cobrar btn-mas" id="nuevo" type="button">+ Registrar Lote</button>
+        </div>
+
+        <div class="filtros">
+          <label class="pv-buscar filtro-buscar">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <input id="q" type="search" placeholder="Buscar lote…" autocomplete="off" aria-label="Buscar lote">
+          </label>
+          <label class="filtro">Producto: <select id="f-prod"><option value="">Todos</option></select></label>
+          <label class="filtro">Estado:
+            <select id="f-estado">
+              <option value="">Todos</option>
+              <option value="vigente">Vigente</option>
+              <option value="por_vencer">Por vencer</option>
+              <option value="vencido">Vencido</option>
+              <option value="agotado">Agotado</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="tabla" aria-live="polite"><p class="vacio">Cargando lotes…</p></div>
+        <div class="paginacion" id="paginacion"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+  <dialog class="modal modal-ancho" id="m-lote" aria-labelledby="m-lote-t">
+    <form id="f-lote" novalidate>
+      <h2 id="m-lote-t">Registrar lote</h2>
+      <p class="m-ayuda">Registra el ingreso de mercadería. El stock del producto aumenta de inmediato.</p>
+      <div class="form-grid">
+        <label class="campo">Producto *<select id="l-prod"></select></label>
+        <label class="campo">Proveedor *<select id="l-prov"></select></label>
+        <label class="campo">N.° de lote *<input id="l-lote" maxlength="40"></label>
+        <label class="campo">Fecha de vencimiento *<input id="l-vence" type="date"></label>
+        <label class="campo">Cantidad (unidades) *<input id="l-cant" type="number" min="1" step="1" inputmode="numeric"></label>
+        <label class="campo">Costo por unidad (S/) *<input id="l-costo" type="number" min="0" step="0.01" inputmode="decimal"></label>
+      </div>
+      <p class="alerta-error" id="l-error" role="alert"></p>
+      <div class="m-botones">
+        <button class="btn btn-borde" id="l-cancelar" type="button">Cancelar</button>
+        <button class="btn btn-cobrar" id="l-guardar" type="submit">Registrar lote</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/inventario.js"></script>
+</body>
+</html>

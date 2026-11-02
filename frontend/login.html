@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css?v=5">
+</head>
+<body>
+  <main class="login">
+    <section class="login-marca" aria-label="NovaSalud">
+      <div class="login-identidad">
+        <img src="img/logo-icon-dark.webp" alt="" aria-hidden="true">
+        <div>
+          <p class="login-nombre">Nova<span>Salud</span></p>
+          <p class="login-lema">Tu salud, nuestra prioridad</p>
+        </div>
+      </div>
+      <p class="login-descripcion">Sistema de gestión de inventario<br>y ventas de la botica</p>
+    </section>
+
+    <form class="form-tarjeta" id="form" novalidate>
+      <header class="login-cabecera">
+        <h1>Iniciar sesión</h1>
+        <p>Accede a tu cuenta</p>
+      </header>
+
+      <div class="alerta-error" id="error" role="alert"></div>
+
+      <label class="entrada con-icono">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3zM3 7l9 6 9-6"/></svg>
+        <input id="correo" name="correo" type="email" autocomplete="username" placeholder="Correo electrónico" aria-label="Correo electrónico" required autofocus>
+      </label>
+      <label class="entrada con-icono con-boton">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Contraseña" aria-label="Contraseña" required>
+        <button type="button" class="ver" id="ver" aria-label="Mostrar contraseña">
+          <svg class="icono" id="ojo" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </label>
+
+      <button class="btn btn-primario" id="enviar" type="submit">Ingresar</button>
+      <p class="ayuda" id="ayuda" hidden>Si no puedes ingresar, pide al administrador que revise tu cuenta o restablezca tu contraseña.</p>
+      <button type="button" class="enlace-ayuda" id="btn-ayuda">¿Problemas para ingresar?</button>
+      <a class="volver" href="index.html">← Volver a la página principal</a>
+      <footer class="login-pie">NovaSalud POS <span>·</span> Botica Nova Salud</footer>
+    </form>
+  </main>
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

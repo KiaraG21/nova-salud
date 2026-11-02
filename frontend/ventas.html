@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historial de Ventas · NovaSalud POS</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body class="app">
+  <div class="principal">
+    <header class="topbar" id="topbar"></header>
+    <main class="contenido" id="contenido">
+      <section class="panel lista">
+        <div class="panel-cab">
+          <h2>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2zM9 8h6M9 12h6"/></svg>
+            Historial de Ventas
+          </h2>
+          <button class="btn btn-cobrar btn-mas" id="buscar" type="button">Buscar</button>
+        </div>
+
+        <div class="filtros">
+          <label class="filtro">Del: <input type="date" id="desde"></label>
+          <label class="filtro">Al: <input type="date" id="hasta"></label>
+          <label class="filtro">Medio de pago:
+            <select id="f-pago">
+              <option value="">Todos</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="yape">Yape</option>
+              <option value="plin">Plin</option>
+            </select>
+          </label>
+          <label class="filtro">Estado:
+            <select id="f-estado">
+              <option value="">Todos</option>
+              <option value="emitida">Emitida</option>
+              <option value="anulada">Anulada</option>
+            </select>
+          </label>
+        </div>
+
+        <p class="alerta-error" id="h-error" role="alert"></p>
+        <div id="tabla" aria-live="polite"><p class="vacio">Cargando ventas…</p></div>
+        <div class="paginacion" id="paginacion"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="aviso" id="aviso" role="status" aria-live="polite" hidden></div>
+
+  <dialog class="modal modal-ancho" id="m-det" aria-labelledby="m-det-t">
+    <h2 id="m-det-t"></h2>
+    <div id="det-cuerpo"></div>
+    <div id="det-anular" hidden>
+      <label class="campo">Motivo de la anulación *<input id="motivo" maxlength="200" placeholder="Ej.: error en el cobro"></label>
+      <p class="alerta-error" id="det-error" role="alert"></p>
+    </div>
+    <div class="m-botones" id="det-botones">
+      <button class="btn btn-borde" id="det-cerrar" type="button">Cerrar</button>
+      <button class="btn btn-cancelar" id="det-anular-btn" type="button" hidden>Anular venta</button>
+    </div>
+  </dialog>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ventas.js"></script>
+</body>
+</html>
